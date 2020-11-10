@@ -45,8 +45,15 @@ class ScenarioType1(ScenarioType):
         ax.scatter(self.agent_start[aid, 0], self.agent_start[aid, 1], color='r')
         ax.scatter(self.agent_target[aid, 0], self.agent_target[aid, 1], color='y')
 
+    def FillByAgentTraj(self, image, aid, size_per_grid=1):
+        traj = self.agent_trajectories[aid]
+        shift = (np.array(image.shape) / 2).astype(np.int)
+        for num_traj in range(traj.shape[0]):
+            locate = traj[num_traj, :] / size_per_grid + shift
+            image[int(locate[1]), int(locate[0])] = 1
+
     def PlotAgentTrajectory(self, ax, aid):
-        ax.plot(self.agent_trajectories[aid][0], self.agent_trajectories[aid][1])
+        ax.plot(self.agent_trajectories[aid][:, 0], self.agent_trajectories[aid][:, 1])
 
     def prepare_trajectories(self, trajectory_path):
         trajectories: List[Optional[np.ndarray]]
@@ -61,8 +68,8 @@ class ScenarioType1(ScenarioType):
                 trajectoryLength, agentId = np.fromfile(file, np.int32, 2)
                 t = np.fromfile(file, np.float32, trajectoryLength - 1).reshape((-1, 2, 2))
                 # offset by one because agentId has been read before
-                trajectories[agentId] = t[:, 0].T
-                forwards[agentId] = t[:, 1].T
+                trajectories[agentId] = t[:, 0]
+                forwards[agentId] = t[:, 1]
 
             self.agent_trajectories = trajectories
             self.agent_forwards = forwards

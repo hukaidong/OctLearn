@@ -1,3 +1,4 @@
+import numpy as np
 import matplotlib as mpl
 from matplotlib import pyplot as plt
 
@@ -14,14 +15,16 @@ class ScenarioCasePainter():
         doc = coll.Case_By_id(case_id)
         assert doc
         scenario = ScenarioType1(doc, r"C:\Users\Kaidong Hu\Desktop\5f8")
-        fig = plt.figure()
-        ax = fig.add_subplot(111)
+        fig = plt.figure(figsize=(10, 5))
+        ax = fig.add_subplot(121)
+        ax_assist = fig.add_subplot(122)
         showAgents = [False for _ in range(scenario.num_agent)]
 
         self.showAgents = showAgents
         self.scenario = scenario
         self.figure = fig
         self.ax = ax
+        self.ax_assist = ax_assist
 
         self.draw()
 
@@ -37,6 +40,13 @@ class ScenarioCasePainter():
                 self.scenario.PlotAgentTask(self.ax, aid)
                 self.scenario.PlotAgentTrajectory(self.ax, aid)
 
+        spg = 0.3
+        image = np.zeros((np.array([40, 40])/spg).astype(int))
+        for aid, show in enumerate(self.showAgents):
+            if show:
+                self.scenario.FillByAgentTraj(image, aid, size_per_grid=spg)
+
+        self.ax_assist.imshow(image, cmap="gray_r", origin='lower', extent=(-20, 20, -20, 20))
         self.figure.show()
 
     def toggleAgentId(self, aid, enabled):
