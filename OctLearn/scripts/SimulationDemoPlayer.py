@@ -1,27 +1,28 @@
 import numpy as np
 import matplotlib as mpl
-from matplotlib import pyplot as plt
+import tkinter as tk
 
-from OctLearn.connector.reader import MongoCollection
-from OctLearn.ScenarioTypes import ScenarioType1
+from matplotlib import pyplot as plt
+from OctLearn.connector.dbRecords import MongoCollection
+from OctLearn.scenariomanage.ScenarioTypes import ScenarioType2
 
 mpl.use('Qt5agg')
 plt.ion()
 
 
-class ScenarioCasePainter():
+class ScenarioCasePainter:
     def __init__(self, case_id):
         coll = MongoCollection('learning', 'complete')
         doc = coll.Case_By_id(case_id)
         assert doc
-        scenario = ScenarioType1(doc, r"C:\Users\Kaidong Hu\Desktop\5f8")
+        sc = ScenarioType2(doc)
         fig = plt.figure(figsize=(10, 5))
         ax = fig.add_subplot(121)
         ax_assist = fig.add_subplot(122)
-        showAgents = [False for _ in range(scenario.num_agent)]
+        showAgents = [False for _ in range(sc.num_agent)]
 
         self.showAgents = showAgents
-        self.scenario = scenario
+        self.scenario = sc
         self.figure = fig
         self.ax = ax
         self.ax_assist = ax_assist
@@ -41,12 +42,13 @@ class ScenarioCasePainter():
                 self.scenario.PlotAgentTrajectory(self.ax, aid)
 
         spg = 0.3
-        image = np.zeros((np.array([40, 40])/spg).astype(int))
+        image = np.zeros((np.array([40, 40]) / spg).astype(int))
         for aid, show in enumerate(self.showAgents):
             if show:
+                print(self.scenario.agent_trajectories[aid].shape)
                 self.scenario.FillByAgentTraj(image, aid, size_per_grid=spg)
 
-        self.ax_assist.imshow(image, cmap="gray_r", origin='lower', extent=(-20, 20, -20, 20))
+        self.ax_assist.imshow(image.T, cmap="gray_r", origin='upper', extent=(-20, 20, -20, 20))
         self.figure.show()
 
     def toggleAgentId(self, aid, enabled):
@@ -58,11 +60,7 @@ class ScenarioCasePainter():
         self.draw()
 
 
-import tkinter as tk
-import tkinter.filedialog as fdlg
-
-
-class Toggler():
+class Toggler:
     def __init__(self, root, prefix, target):
         self.enabled = True
         self.prefix = prefix
@@ -91,17 +89,17 @@ class Toggler():
             self.target(self.enabled)
 
 
-def toggleWrapper(i):
-    aid = i
+def toggleWrapper(aid):
+    _aid = aid
 
     def func(x):
-        scenario.toggleAgentId(aid, x)
+        scenario.toggleAgentId(_aid, x)
 
     return func
 
 
 if __name__ == '__main__':
-    scenario = ScenarioCasePainter('5f85acee767dae76c6c9bf14')
+    scenario = ScenarioCasePainter('5f85adca767dae76c6c9bf17')
     app = tk.Tk()
     toggles = []
 
@@ -112,12 +110,14 @@ if __name__ == '__main__':
         app.after(100, checkFigOpen)
 
 
+    frame = None
     for i in range(scenario.scenario.num_agent):
-        if i % 10 == 0:
+        if i % 10 == 0 or frame is None:
             frame = tk.Frame()
             frame.pack(fill='x')
-        t = Toggler(frame, "Agent %d:" % i, toggleWrapper(i))
-        toggles.append(t)
+        toggler = Toggler(frame, "Agent %d:" % i, toggleWrapper(i))
+        toggles.append(toggler)
+
 
     def toggleAll(b):
         for t in toggles:

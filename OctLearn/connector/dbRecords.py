@@ -14,6 +14,20 @@ class MongoCollection():
         self.db = self.client[database]
         self.col = self.db[collection]
 
+    def Case_Ids(self):
+        return [x['_id'] for x in self.col.find({}, {'_id': 1})]
+
+    def Case_Random_N(self, N):
+        cursor = self.col.aggregate([{'$sample': {'size': N}}])
+        return [*cursor]
+
     def Case_By_id(self, doc_id: str):
         objId = bson.ObjectId(doc_id)
         return self.col.find_one({'_id': objId})
+
+    def find(self, *args, **kwargs):
+        return self.col.find(*args, **kwargs)
+
+
+if __name__ == '__main__':
+    db = MongoCollection('learning', 'complete')
