@@ -15,7 +15,7 @@ class MongoCollection():
         self.col = self.db[collection]
 
     def Case_Ids(self):
-        return [x['_id'] for x in self.col.find({}, {'_id': 1})]
+        return [str(x['_id']) for x in self.col.find({}, {'_id': 1})]
 
     def Case_Random_N(self, N):
         cursor = self.col.aggregate([{'$sample': {'size': N}}])

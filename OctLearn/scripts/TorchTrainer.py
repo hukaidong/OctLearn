@@ -2,7 +2,7 @@ import numpy as np
 import random
 import torch
 import matplotlib.pyplot as plt
-
+from torch.utils.tensorboard import SummaryWriter
 from torch.utils.data.dataloader import DataLoader
 
 from OctLearn.connector.dbRecords import MongoCollection
@@ -11,99 +11,127 @@ from OctLearn.autoencoder.autoencoder import Encoder, Decoder
 from OctLearn.autoencoder.radiencoder import RdAutoencoder
 from OctLearn.connector.hopdataset import HopDataset
 
-global_seed = 74513
-use_gpu = True
-latent_size = 1000
+if __name__ == '__main__':
+    step = 0
+    global_seed = random.randint(0, 100000000)
+    print('Seeded with num: %d' % global_seed)
+    use_gpu = True
+    latent_size = 1000
 
-device = torch.device("cuda:0" if use_gpu else "cpu")
+    writer = SummaryWriter()
+    device = torch.device("cuda:0" if use_gpu else "cpu")
 
-random.seed(global_seed)
-np.random.seed(global_seed)
-torch.manual_seed(global_seed)
-
-db = MongoCollection('learning', 'complete')
-
-
-def cycled_training_cases():
-    dataset = HopDataset(device)
-    loader = DataLoader(dataset, batch_size=50)
-    while True:
-        for x in loader:
-            yield x
+    random.seed(global_seed)
+    np.random.seed(global_seed)
+    torch.manual_seed(global_seed)
 
 
-TrajRoot = r"C:\Users\Kaidong Hu\Desktop\5f8"
-syn = Synthezier()
-enc = Encoder(latent_size).to(device)
-dec = Decoder(latent_size).to(device)
-
-def demo():
-    enc.load_state_dict(torch.load("enc4001.torchfile"))
-    dec.load_state_dict(torch.load('dec4001.torchfile'))
-    enc.eval()
-    dec.eval()
-
-    map, tsk, trj = next(cycled_training_cases())
-
-    xi, xo = syn(map, tsk, trj)
-    z = enc(xi)
-    xp = dec(z, compute_dist=False)
-
-    for i in range(xo.shape[0]):
-        plt.imshow(xo.detach().cpu().numpy()[i, 0], 'gray_r', origin='lower')
-        plt.title(str(i)+"truth")
-        plt.savefig(str(i)+'truth.jpg')
-        plt.show()
-        plt.imshow(xp.detach().cpu().numpy()[i, 0], 'gray_r', origin='lower')
-        plt.title(str(i)+"pred")
-        plt.savefig(str(i)+'pred.jpg')
-        plt.show()
-
-    raise KeyboardInterrupt
+    def cycled_training_cases():
+        db = MongoCollection('learning', 'completed')
+        dataset = HopDataset(device, case_list=db.Case_Ids())
+        loader = DataLoader(dataset, batch_size=125, num_workers=8, pin_memory=True)
+        del db
+        batchnum = 0
+        while True:
+            batchnum += 1
+            print('starting %d batch' % batchnum)
+            for x in loader:
+                yield x
 
 
+    # TrajRoot = r"C:\Users\Kaidong Hu\Desktop\5f8"
+    syn = Synthezier()
+    enc = Encoder(latent_size).to(device)
+    dec = Decoder(latent_size).to(device)
 
-rd = RdAutoencoder(latent_size, lambda1=1, lambda2=1).to(device)
-par = list() + list(enc.parameters()) + list(dec.parameters())
-opt = torch.optim.RMSprop(par, lr=0.001, centered=True)
 
-try:
-    for step, (map, tsk, trj) in enumerate(cycled_training_cases()):
-        enc.zero_grad()
-        dec.zero_grad()
+    def demo():
+        enc.load_state_dict(torch.load("enc4001.torchfile"))
+        dec.load_state_dict(torch.load('dec4001.torchfile'))
+        enc.eval()
+        dec.eval()
+
+        map, tsk, trj = next(cycled_training_cases())
 
         xi, xo = syn(map, tsk, trj)
         z = enc(xi)
-        xp, xd = dec(z, compute_dist=True)
-        loss = rd(z, xo, xp, xd).mean()
+        xp = dec(z, compute_dist=False)
 
-        if step % 100 == 1:
-            plt.imshow(xo[0][0].detach().cpu().numpy())
-            plt.title('xo_0')
+        for i in range(xo.shape[0]):
+            plt.imshow(xo.detach().cpu().numpy()[i, 0], 'gray_r', origin='lower')
+            plt.title(str(i) + "truth")
+            plt.savefig(str(i) + 'truth.jpg')
             plt.show()
-            plt.imshow(xp[0][0].detach().cpu().numpy())
-            plt.title('xp_0')
+            plt.imshow(xp.detach().cpu().numpy()[i, 0], 'gray_r', origin='lower')
+            plt.title(str(i) + "pred")
+            plt.savefig(str(i) + 'pred.jpg')
             plt.show()
-            plt.imshow(xo[1][0].detach().cpu().numpy())
-            plt.title('xo_1')
-            plt.show()
-            plt.imshow(xp[1][0].detach().cpu().numpy())
-            plt.title('xp_1')
-            plt.show()
-            plt.imshow(xp[2][0].detach().cpu().numpy())
-            plt.title('xp_2')
-            plt.show()
-            plt.pause(0)
-            torch.save(enc.state_dict(), "enc%d.torchfile"%step)
-            torch.save(dec.state_dict(), "dec%d.torchfile"%step)
-            print('step:', step, ', loss:', float(loss))
 
-        loss.backward()
-        opt.step()
+        raise KeyboardInterrupt
 
-        if step == 20000:
-            break
 
-except KeyboardInterrupt:
-    pass
+    def init_weight(m):
+        classname = m.__class__.__name__
+        if hasattr(m, 'weight') and (classname.find('Conv') != -1 or classname.find('Linear') != -1):
+            torch.nn.init.xavier_normal_(m.weight.data)
+        if hasattr(m, 'bias') and m.bias is not None:
+            torch.nn.init.constant_(m.bias.data, 0.0)
+        if classname.find('BatchNorm2d') != -1:
+            torch.nn.init.normal_(m.weight.data, 1.0)
+            torch.nn.init.constant_(m.bias.data, 0.0)
 
+
+    enc.apply(init_weight)
+    dec.apply(init_weight)
+
+    rd = RdAutoencoder(latent_size, lambda1=1, lambda2=0.001).to(device)
+    par = list() + list(enc.parameters()) + list(dec.parameters())
+    opt = torch.optim.SGD(par, lr=0.01,
+                          # centered=True,
+                          weight_decay=0.002)
+    sch = torch.optim.lr_scheduler.CyclicLR(opt, 0.01, 0.1, 80)
+    try:
+        print('READY TO GO')
+        for step, (map, tsk, trj) in enumerate(cycled_training_cases()):
+            map = map.to(device)
+            tsk = tsk.to(device)
+            trj = trj.to(device)
+
+            enc.zero_grad()
+            dec.zero_grad()
+
+            xi, xo = syn(map, tsk, trj)
+            z = enc(xi)
+            xp, xd = dec(z, compute_dist=True)
+            loss = rd(z, xo, xp, xd).mean()
+            if torch.isnan(loss):
+                raise ValueError('nan occured')
+
+            if step % 1000 == 1:
+                sch.step()
+                writer.add_scalar('loss', loss, step)
+                writer.add_scalar('lr', sch.get_last_lr()[-1], step)
+                rd.record_sample(writer, z[0], xo, xp, xd, step)
+                for i in range(3):
+                    sh0, *_ = xo.shape
+                    idx0 = np.random.randint(sh0)
+                    predG = xp[idx0]
+                    pmin = torch.min(predG)
+                    pmax = torch.max(predG)
+                    normedG = (predG - pmin) / (pmax - pmin)
+                    writer.add_image('truth/%d' % i, xo[idx0], step)
+                    writer.add_image('pred/%d' % i, predG, step)
+                    writer.add_image('pred/%d normed' % i, normedG, step)
+
+            loss.backward()
+            opt.step()
+
+            if step == 200000:
+                break
+
+    except KeyboardInterrupt:
+        pass
+
+    finally:
+        torch.save(enc.state_dict(), "enc%d.torchfile" % step)
+        torch.save(dec.state_dict(), "dec%d.torchfile" % step)

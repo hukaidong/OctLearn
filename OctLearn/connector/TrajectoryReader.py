@@ -7,7 +7,7 @@ TRAJECTORY_ROOT = ENV['TrajRoot']
 
 
 def readTrajectory(objId):
-    filename = path.join(TRAJECTORY_ROOT, str(objId))
+    filename = path.join(TRAJECTORY_ROOT, str(objId)[-2:], str(objId))
     return prepare_trajectories(filename)
 
 

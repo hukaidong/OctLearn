@@ -1,13 +1,29 @@
 import numpy as np
 import os
 
+from functools import lru_cache
 from os import path
 from os import environ as ENV
 from OctLearn.utils import RectangleRepXY, ImageTranslateCrop
+from OctLearn.connector.dbRecords import MongoCollection
 from OctLearn.connector.TrajectoryReader import readTrajectory
 from OctLearn.scenariomanage.ScenarioTypes import ScenarioType3
 
 FeatRoot = ENV['FeatRoot']
+
+
+@lru_cache(maxsize=None)
+def ObjectId2Feature(objectId: str):
+    objTail = objectId[-2:]
+    dirTarget = path.join(FeatRoot, objTail)
+    fileTarget = path.join(dirTarget, objectId+'.npz')
+    if os.path.exists(fileTarget):
+        target = dict(np.load(fileTarget))
+    else:
+        mongo = MongoCollection('learning', 'completed')
+        doc = mongo.Case_By_id(objectId)
+        target = Trajectory2Feature(doc)
+    return target
 
 
 def Trajectory2Feature(doc, proto=ScenarioType3, save_result=True):
@@ -73,11 +89,8 @@ def GetAgentTrajVision(scenario, trajs):
 
 
 if __name__ == '__main__':
-    from OctLearn.connector.dbRecords import MongoCollection
 
-    db = MongoCollection('learning', 'complete')
-
-    for doc in db.find({}):
-        Trajectory2Feature(doc)
+    objId = '5f85aee9767dae76c6c9bf1b'
+    print(ObjectId2Feature(objId))
 
 

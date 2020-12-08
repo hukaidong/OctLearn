@@ -5,9 +5,9 @@ import tkinter as tk
 from matplotlib import pyplot as plt
 from OctLearn.connector.dbRecords import MongoCollection
 from OctLearn.scenariomanage.ScenarioTypes import ScenarioType2
-
-mpl.use('Qt5agg')
-plt.ion()
+if __name__ == '__main__':
+    mpl.use('Qt5agg')
+    plt.ion()
 
 
 class ScenarioCasePainter:

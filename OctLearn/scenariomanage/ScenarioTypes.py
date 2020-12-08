@@ -3,7 +3,8 @@ from collections import namedtuple
 import numpy as np
 import matplotlib as mpl
 
-mpl.use('qt5agg')
+if __name__ == '__main__':
+    mpl.use('qt5agg')
 import matplotlib.pyplot as plt
 from pathlib import Path
 
