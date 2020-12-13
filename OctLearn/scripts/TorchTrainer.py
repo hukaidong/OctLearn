@@ -1,19 +1,17 @@
 import numpy as np
 import random
 import torch
-import matplotlib.pyplot as plt
 from torch.utils.tensorboard import SummaryWriter
 from torch.utils.data.dataloader import DataLoader
 
+from OctLearn.autoencoder.TaskSynthesis import Features2TaskTensors
 from OctLearn.connector.dbRecords import MongoCollection
-from OctLearn.autoencoder.TaskSynthesis import Synthezier
 from OctLearn.autoencoder.autoencoder import Encoder, Decoder
-from OctLearn.autoencoder.radiencoder import RdAutoencoder
+from OctLearn.autoencoder.radiencoder import RateDistortionAutoencoder
 from OctLearn.connector.hopdataset import HopDataset
 
 if __name__ == '__main__':
     step = 0
-    global_seed = random.randint(0, 100000000)
     print('Seeded with num: %d' % global_seed)
     use_gpu = True
     latent_size = 1000
@@ -21,9 +19,6 @@ if __name__ == '__main__':
     writer = SummaryWriter()
     device = torch.device("cuda:0" if use_gpu else "cpu")
 
-    random.seed(global_seed)
-    np.random.seed(global_seed)
-    torch.manual_seed(global_seed)
 
 
     def cycled_training_cases():
@@ -39,35 +34,9 @@ if __name__ == '__main__':
                 yield x
 
 
-    # TrajRoot = r"C:\Users\Kaidong Hu\Desktop\5f8"
-    syn = Synthezier()
+    syn = Features2TaskTensors()
     enc = Encoder(latent_size).to(device)
     dec = Decoder(latent_size).to(device)
-
-
-    def demo():
-        enc.load_state_dict(torch.load("enc4001.torchfile"))
-        dec.load_state_dict(torch.load('dec4001.torchfile'))
-        enc.eval()
-        dec.eval()
-
-        map, tsk, trj = next(cycled_training_cases())
-
-        xi, xo = syn(map, tsk, trj)
-        z = enc(xi)
-        xp = dec(z, compute_dist=False)
-
-        for i in range(xo.shape[0]):
-            plt.imshow(xo.detach().cpu().numpy()[i, 0], 'gray_r', origin='lower')
-            plt.title(str(i) + "truth")
-            plt.savefig(str(i) + 'truth.jpg')
-            plt.show()
-            plt.imshow(xp.detach().cpu().numpy()[i, 0], 'gray_r', origin='lower')
-            plt.title(str(i) + "pred")
-            plt.savefig(str(i) + 'pred.jpg')
-            plt.show()
-
-        raise KeyboardInterrupt
 
 
     def init_weight(m):
@@ -84,15 +53,15 @@ if __name__ == '__main__':
     enc.apply(init_weight)
     dec.apply(init_weight)
 
-    rd = RdAutoencoder(latent_size, lambda1=1, lambda2=0.001).to(device)
+    rd = RateDistortionAutoencoder(latent_size, lambda0=1, lambda1=0.001).to(device)
     par = list() + list(enc.parameters()) + list(dec.parameters())
     opt = torch.optim.SGD(par, lr=0.01,
                           # centered=True,
                           weight_decay=0.002)
     sch = torch.optim.lr_scheduler.CyclicLR(opt, 0.01, 0.1, 80)
-    try:
-        print('READY TO GO')
-        for step, (map, tsk, trj) in enumerate(cycled_training_cases()):
+    print('READY TO GO')
+    for step, (map, tsk, trj) in enumerate(cycled_training_cases()):
+        try:
             map = map.to(device)
             tsk = tsk.to(device)
             trj = trj.to(device)
@@ -129,9 +98,8 @@ if __name__ == '__main__':
             if step == 200000:
                 break
 
-    except KeyboardInterrupt:
-        pass
+        except KeyboardInterrupt:
+            break
 
-    finally:
-        torch.save(enc.state_dict(), "enc%d.torchfile" % step)
-        torch.save(dec.state_dict(), "dec%d.torchfile" % step)
+    torch.save(enc.state_dict(), "enc%d.torchfile" % step)
+    torch.save(dec.state_dict(), "dec%d.torchfile" % step)

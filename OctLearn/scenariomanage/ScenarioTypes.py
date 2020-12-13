@@ -1,14 +1,11 @@
-from collections import namedtuple
+if __name__ == '__main__':
+    import matplotlib as mpl
+    mpl.use('qt5agg')
 
 import numpy as np
-import matplotlib as mpl
-
-if __name__ == '__main__':
-    mpl.use('qt5agg')
 import matplotlib.pyplot as plt
-from pathlib import Path
 
-from typing import List, Optional
+from typing import List
 from os import environ as ENV
 
 from OctLearn.utils import RectangleRepXY, ImageTranslateCrop

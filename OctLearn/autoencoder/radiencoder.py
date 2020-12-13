@@ -4,13 +4,18 @@ from torch import nn
 from OctLearn.autoencoder.distribution import NormalLogProb
 
 
-class RdAutoencoder(nn.Module):
-    def __init__(self, latent_size, lambda1=1, lambda2=1):
+def isnan(tensor):
+    return torch.any(torch.isnan(tensor))
+
+
+# Referred from paper: https://arxiv.org/abs/1910.04329
+class RateDistortionAutoencoder(nn.Module):
+    def __init__(self, latent_size, lambda0=1, lambda1=1):
         super().__init__()
         self.register_buffer('p_z_loc', torch.zeros(latent_size))
         self.register_buffer('p_z_scale', torch.ones(latent_size))
-        self.lambda0 = lambda1
-        self.lambda1 = lambda2
+        self.lambda0 = lambda0
+        self.lambda1 = lambda1
         self.log_p_z = NormalLogProb()
 
     def forward(self, z, x, xpred, xdist, *, out=None):
@@ -31,8 +36,6 @@ class RdAutoencoder(nn.Module):
         log_p_z = torch.clip(log_p_z, -3, 0)
         loss = -0.01*log_p_z + self.lambda0 * (log_d_x) + self.lambda1 * d_xp_xd
 
-        def isnan(tensor):
-            return torch.any(torch.isnan(tensor))
 
         if isnan(log_p_z) or isnan(log_d_x) or isnan(loss):
             valtoshow = {

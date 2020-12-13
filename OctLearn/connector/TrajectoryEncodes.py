@@ -83,7 +83,7 @@ def GetAgentTrajVision(scenario, trajs):
         trajVis = np.zeros([*GridBleedingSize])
         np.put(trajVis, trajUIdx, 1, mode='wrap')  # override all trajectory space with 1
 
-        visionData[i, 0] = ImageTranslateCrop(trajVis, shift * Resolution, bleeding_already=True)
+        visionData[i, 0] = ImageTranslateCrop(trajVis, shift * Resolution, target_size_factor=0.5)
 
     return visionData
 

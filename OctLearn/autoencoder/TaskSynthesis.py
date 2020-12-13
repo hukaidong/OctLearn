@@ -1,34 +1,20 @@
-import numpy as np
 import torch
 from torch import nn
 
 
-class Synthezier(nn.Module):
+class Features2TaskTensors(nn.Module):
     def __init__(self):
         super().__init__()
-        self.upsamp = nn.UpsamplingNearest2d(size=(100, 100))
+        self.upsampling = nn.UpsamplingNearest2d(size=(100, 100))
 
-    def forward(self, map, agentTask, agentTraj):
-        if len(map.shape) == 3:
-            map = map.unsqueeze(1)
-        if len(agentTraj.shape) == 3:
-            agentTraj = map.unsqueeze(1)
+    def forward(self, vmap, agentTask, atraj):
+        if len(vmap.shape) == 3:
+            vmap = vmap.unsqueeze(1)
+        if len(atraj.shape) == 3:
+            atraj = vmap.unsqueeze(1)
 
-        m20x20stack = torch.hstack((map, agentTask))
-        m100x100stack = self.upsamp(m20x20stack)
-        return torch.hstack((agentTraj, m100x100stack)), agentTraj
+        m20x20stack = torch.hstack((vmap, agentTask))
+        m100x100stack = self.upsampling(m20x20stack)
+        return torch.hstack((atraj, m100x100stack)), atraj
 
 
-if __name__ == '__main__':
-    import matplotlib.pyplot as plt
-    syn = Synthezier()
-    map = torch.Tensor(np.load('../agentcubemap.npy')).unsqueeze(0)
-    aTa = torch.Tensor(np.load('../agenttask.npy')).unsqueeze(0)
-    aTj = torch.Tensor(np.load('../trajcentered.npy')).unsqueeze(0)
-
-    result = syn(map, aTa, aTj)
-
-    r = result.numpy()
-    for i in range(4):
-        plt.imshow(r[0, i], 'gray_r', origin='lower')
-        plt.show()

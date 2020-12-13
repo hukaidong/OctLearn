@@ -4,7 +4,7 @@ import pymongo.collection
 import bson
 
 
-class MongoCollection():
+class MongoCollection:
     client: pymongo.MongoClient
     db: pymongo.database.Database
     col: pymongo.collection.Collection
