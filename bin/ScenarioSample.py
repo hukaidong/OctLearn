@@ -1,11 +1,11 @@
 import numpy as np
 from matplotlib import pyplot as plt
 
-from OctLearn.connector.dbRecords import MongoCollection
+from OctLearn.connector.dbRecords import MongoInstance
 from OctLearn.scenariomanage.ScenarioTypes import ScenarioType3
 
 case_id = '5f85acee767dae76c6c9bf14'
-coll = MongoCollection('learning', 'complete')
+coll = MongoInstance('learning', 'complete')
 doc = coll.Case_By_id(case_id)
 assert doc
 scenario = ScenarioType3(doc, r"C:\Users\Kaidong Hu\Desktop\5f8")

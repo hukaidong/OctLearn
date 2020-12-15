@@ -11,7 +11,6 @@ from os import environ as ENV
 from OctLearn.utils import RectangleRepXY, ImageTranslateCrop
 from OctLearn.connector.TrajectoryReader import readTrajectory
 
-TrajRoot = ENV['TrajRoot']
 
 
 class ScenarioType:
@@ -118,10 +117,10 @@ class ScenarioType3(ScenarioType1):
 
 
 if __name__ == '__main__':
-    from OctLearn.connector.dbRecords import MongoCollection
+    from OctLearn.connector.dbRecords import MongoInstance
 
 
-    cc = MongoCollection('learning', 'complete')
+    cc = MongoInstance('learning', 'complete')
 
     doc = cc.Case_By_id('')
     st = ScenarioType3(doc)

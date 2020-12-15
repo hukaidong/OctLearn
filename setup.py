@@ -1,6 +1,6 @@
-from setuptools import setup
+import setuptools
 
-setup(
+setuptools.setup(
     name='OctLearn',
     version='1',
     packages=['OctLearn', 'OctLearn.connector'],
@@ -13,5 +13,7 @@ setup(
         'matplotlib>=3.3',
         'numpy>=1.19',
         'pymongo>=3.11',
-    ]
+        'torch>=1.15'
+    ],
+    scripts=['scripts/Train2.py']
 )

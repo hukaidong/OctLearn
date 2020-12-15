@@ -5,28 +5,29 @@ from functools import lru_cache
 from os import path
 from os import environ as ENV
 from OctLearn.utils import RectangleRepXY, ImageTranslateCrop
-from OctLearn.connector.dbRecords import MongoCollection
+from OctLearn.connector.dbRecords import MongoInstance
 from OctLearn.connector.TrajectoryReader import readTrajectory
 from OctLearn.scenariomanage.ScenarioTypes import ScenarioType3
 
-FeatRoot = ENV['FeatRoot']
 
 
 @lru_cache(maxsize=None)
 def ObjectId2Feature(objectId: str):
+    FeatRoot = ENV['FeatRoot']
     objTail = objectId[-2:]
     dirTarget = path.join(FeatRoot, objTail)
     fileTarget = path.join(dirTarget, objectId+'.npz')
     if os.path.exists(fileTarget):
         target = dict(np.load(fileTarget))
     else:
-        mongo = MongoCollection('learning', 'completed')
+        mongo = MongoInstance('learning', 'completed')
         doc = mongo.Case_By_id(objectId)
         target = Trajectory2Feature(doc)
     return target
 
 
 def Trajectory2Feature(doc, proto=ScenarioType3, save_result=True):
+    FeatRoot = ENV['FeatRoot']
     scenario = proto(doc)
 
     objId = str(doc['_id'])
@@ -46,7 +47,7 @@ def Trajectory2Feature(doc, proto=ScenarioType3, save_result=True):
         fileTarget = path.join(dirTarget, objId)
 
         os.makedirs(dirTarget, mode=0o755, exist_ok=True)
-        np.savez(fileTarget, **feature)
+        np.savez_compressed(fileTarget, **feature)
 
     return feature
 
@@ -83,7 +84,7 @@ def GetAgentTrajVision(scenario, trajs):
         trajVis = np.zeros([*GridBleedingSize])
         np.put(trajVis, trajUIdx, 1, mode='wrap')  # override all trajectory space with 1
 
-        visionData[i, 0] = ImageTranslateCrop(trajVis, shift * Resolution, target_size_factor=0.5)
+        visionData[i, 0] = ImageTranslateCrop(trajVis, shift * Resolution, target_size=GridManhttanSize)
 
     return visionData
 

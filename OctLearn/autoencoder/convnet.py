@@ -60,7 +60,7 @@ class FlatToImgNetwork(nn.Module):
         return self.net(_input)
 
 
-class Img2ImgDisturbNetwork(nn.Module):
+class ImgToImgDisturbNetwork(nn.Module):
     def __init__(self, channels):
         super().__init__()
         modules = [
@@ -74,7 +74,7 @@ class Img2ImgDisturbNetwork(nn.Module):
         return self.net(_input)
 
 
-class Flat2FlatNetwork:
+class FlatToFlatNetwork(nn.Module):
     def __init__(self, input_size, output_size):
         super().__init__()
         hidden_size = 1024

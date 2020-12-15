@@ -1,3 +1,4 @@
+import torch
 import numpy as np
 from collections import namedtuple
 
@@ -47,7 +48,7 @@ def ImageTranslateCrop(array, shift, target_size=None):
     max_point[(origin, padded)] = min_point[(origin, padded)] + size[origin]
     max_point[(cropped, padded)] = min_point[(cropped, padded)] + size[cropped]
 
-    def sRect(target): return [slice(min_point[target][x], max_point[target][x]) for x in (0, 1)]
+    def sRect(target): return tuple(slice(min_point[target][x], max_point[target][x]) for x in (0, 1))
 
     img_padded = np.zeros(size[padded])
     img_padded[sRect((origin, padded))] = array
@@ -64,3 +65,17 @@ def RandSeeding(seed=None):
     torch.manual_seed(seed)
 
     return seed
+
+
+def WeightInitializer(m):
+    classname = m.__class__.__name__
+    if hasattr(m, 'weight') and (classname.find('Conv') != -1 or classname.find('Linear') != -1):
+        torch.nn.init.xavier_normal_(m.weight.data)
+    if hasattr(m, 'bias') and m.bias is not None:
+        torch.nn.init.constant_(m.bias.data, 0.0)
+    if classname.find('BatchNorm2d') != -1:
+        torch.nn.init.normal_(m.weight.data, 1.0)
+        torch.nn.init.constant_(m.bias.data, 0.0)
+
+def DataLoaderCollate(batch):
+    return tuple(zip(*batch))

@@ -126,3 +126,8 @@ dmypy.json
 
 # data file
 .npy
+
+
+# runtime records
+runs/
+.torchfile

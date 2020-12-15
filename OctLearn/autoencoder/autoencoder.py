@@ -1,6 +1,7 @@
 import torch
 from torch import nn
 
+
 class Encoder(nn.Module):
     """Approximate posterior parameterized by an inference network."""
 
@@ -33,3 +34,46 @@ class Decoder(nn.Module):
             return xp, xd
         else:
             return xp
+
+
+class Autoencoder(nn.Module):
+    def __init__(self, encoder, decoder, policy):
+        super().__init__()
+        self.encoder = encoder
+        self.decoder = decoder
+        self.policy = policy
+
+    def forward(self, img_input):
+        latent = self.encoder(img_input)
+        img_output = self.decoder(latent)
+        return img_output
+
+    def compute_loss(self, img_input, img_output):
+        latent = self.encoder(img_input)
+        img_pred, img_dist = self.decoder(latent, compute_dist=True)
+        loss = self.policy(latent, img_output, img_pred, img_dist)
+        return loss.mean()
+
+
+class Decipher(nn.Module):
+    def __init__(self, encoder, decipher):
+        super().__init__()
+        self.encoder = encoder
+        self.decipher = decipher
+        self.last_states = None
+
+    def forward(self, img_input):
+        latent = self.encoder(img_input)
+        return self.decipher(latent)
+
+    def compute_loss(self, img_input, parms_output):
+        latent = self.encoder(img_input)
+        pred = self.decipher(latent)
+        loss = torch.pow(pred - parms_output, 2)
+        mean_loss = loss.mean()
+        self.last_states = {
+            'img_input': img_input,
+            'loss': loss,
+            'mean_loss': mean_loss
+        }
+        return mean_loss

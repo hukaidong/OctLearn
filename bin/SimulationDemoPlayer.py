@@ -3,7 +3,7 @@ import matplotlib as mpl
 import tkinter as tk
 
 from matplotlib import pyplot as plt
-from OctLearn.connector.dbRecords import MongoCollection
+from OctLearn.connector.dbRecords import MongoInstance
 from OctLearn.scenariomanage.ScenarioTypes import ScenarioType2
 if __name__ == '__main__':
     mpl.use('Qt5agg')
@@ -12,7 +12,7 @@ if __name__ == '__main__':
 
 class ScenarioCasePainter:
     def __init__(self, case_id):
-        coll = MongoCollection('learning', 'complete')
+        coll = MongoInstance('learning', 'complete')
         doc = coll.Case_By_id(case_id)
         assert doc
         sc = ScenarioType2(doc)

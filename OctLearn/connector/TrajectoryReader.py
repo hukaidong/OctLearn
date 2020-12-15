@@ -3,10 +3,10 @@ import numpy as np
 from os import environ as ENV
 from os import path
 
-TRAJECTORY_ROOT = ENV['TrajRoot']
 
 
 def readTrajectory(objId):
+    TRAJECTORY_ROOT = ENV['TrajRoot']
     filename = path.join(TRAJECTORY_ROOT, str(objId)[-2:], str(objId))
     return prepare_trajectories(filename)
 
