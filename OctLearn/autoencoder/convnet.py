@@ -38,7 +38,7 @@ class FlatToImgNetwork(nn.Module):
         hidden_channels = 10
         modules = [
             nn.Linear(input_size, 5 * 13 * 13),
-            # nn.ReLU(True),
+            nn.ReLU(True),
             nn.Linear(5 * 13 * 13, 10 * 13 * 13),
             nn.Unflatten(1, (10, 13, 13)),
             nn.ConvTranspose2d(hidden_channels, hidden_channels, kernel_size=3, stride=2, padding=1, output_padding=1),
