@@ -1,6 +1,6 @@
 import torch
-from torch.nn.functional import interpolate
 from torch import nn
+from torch.nn.functional import interpolate
 
 
 class Features2TaskTensors(nn.Module):

@@ -62,6 +62,16 @@ class Decipher(nn.Module):
         self.decipher = decipher
         self.last_states = None
 
+    def train(self, *args, **kwargs):
+        super().train(*args, **kwargs)
+        self.encoder.eval()
+        self.decipher.train()
+
+    def eval(self):
+        super().eval()
+        self.encoder.eval()
+        self.decipher.eval()
+
     def forward(self, img_input):
         latent = self.encoder(img_input)
         return self.decipher(latent)

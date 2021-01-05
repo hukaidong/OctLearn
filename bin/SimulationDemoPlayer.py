@@ -3,8 +3,8 @@ import matplotlib as mpl
 import tkinter as tk
 
 from matplotlib import pyplot as plt
-from OctLearn.connector.dbRecords import MongoInstance
-from OctLearn.scenariomanage.ScenarioTypes import ScenarioType2
+from octLearn.connector.dbRecords import MongoInstance
+from octLearn.scenariomanage.ScenarioTypes import ScenarioType2
 if __name__ == '__main__':
     mpl.use('Qt5agg')
     plt.ion()

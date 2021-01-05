@@ -2,15 +2,13 @@ if __name__ == '__main__':
     import matplotlib as mpl
     mpl.use('qt5agg')
 
-import numpy as np
-import matplotlib.pyplot as plt
-
 from typing import List
-from os import environ as ENV
 
-from OctLearn.utils import RectangleRepXY, ImageTranslateCrop
-from OctLearn.connector.TrajectoryReader import readTrajectory
+import matplotlib.pyplot as plt
+import numpy as np
 
+from octLearn.connector.TrajectoryReader import readTrajectory
+from octLearn.f.graphic import translate_and_crop, RectangleRepXY
 
 
 class ScenarioType:
@@ -101,7 +99,7 @@ class ScenarioType3(ScenarioType1):
         visionData = np.empty([self.num_agent, 1, 20, 20])
         for i in range(self.num_agent):
             shift = self.shift[i]
-            visionData[i, 0] = ImageTranslateCrop(self.world, shift)
+            visionData[i, 0] = translate_and_crop(self.world, shift)
         return visionData
 
     def GetAgentTaskVision(self):
@@ -117,7 +115,7 @@ class ScenarioType3(ScenarioType1):
 
 
 if __name__ == '__main__':
-    from OctLearn.connector.dbRecords import MongoInstance
+    from octLearn.connector.dbRecords import MongoInstance
 
 
     cc = MongoInstance('learning', 'complete')

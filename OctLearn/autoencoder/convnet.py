@@ -1,4 +1,3 @@
-import torch
 from torch import nn
 
 
@@ -82,8 +81,7 @@ class FlatToFlatNetwork(nn.Module):
             nn.Linear(input_size, hidden_size), nn.ReLU(True),
             nn.Linear(hidden_size, hidden_size), nn.ReLU(True),
             nn.Linear(hidden_size, hidden_size), nn.ReLU(True),
-            nn.Linear(hidden_size, output_size), nn.ReLU(True),
-
+            nn.Linear(hidden_size, output_size)
         ]
         self.net = nn.Sequential(*modules)
 

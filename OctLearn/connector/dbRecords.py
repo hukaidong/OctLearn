@@ -1,12 +1,12 @@
 import os
 import pickle
-import pymongo
-import pymongo.database
-import pymongo.collection
-import bson
-
 from os import environ as ENV
 from os.path import join as pJoin
+
+import bson
+import pymongo
+import pymongo.collection
+import pymongo.database
 
 
 class MongoInstance:

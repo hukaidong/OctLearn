@@ -1,21 +1,7 @@
 import torch
+from torch.utils.data.dataset import IterableDataset
 
-from torch.utils.data import IterableDataset
-from torch.utils.data.dataset import T_co
-from OctLearn.connector.TrajectoryEncodes import ObjectId2Feature
-
-
-def ObjectId2Tensors(objectId):
-    feat = ObjectId2Feature(objectId)
-
-    raw_map = feat['cubevis']
-    raw_tsk = feat['taskvis']
-    raw_trj = feat['trajvis']
-    raw_prm = feat['agtparm']
-
-    tensors = list(map(torch.Tensor, [raw_map, raw_tsk, raw_trj, raw_prm]))
-    for i in range(raw_map.shape[0]):
-        yield [t[i] for t in tensors]
+from octLearn.f.feature_cache import ObjectId2Feature
 
 
 def distributeIds(data, num_workers, index):
@@ -31,8 +17,21 @@ def distributeIds(data, num_workers, index):
         return
 
 
+def ObjectId2Tensors(objectId):
+    feat = ObjectId2Feature(objectId)
+
+    raw_map = feat['cubevis']
+    raw_tsk = feat['taskvis']
+    raw_trj = feat['trajvis']
+    raw_prm = feat['agtparm']
+
+    tensors = list(map(torch.Tensor, [raw_map, raw_tsk, raw_trj, raw_prm]))
+    for i in range(raw_map.shape[0]):
+        yield [t[i] for t in tensors]
+
+
 class HopDataset(IterableDataset):
-    def __getitem__(self, index) -> T_co:
+    def __getitem__(self, index):
         if index != 0:
             raise ValueError
         return next(ObjectId2Tensors(self.case_list[0]))
@@ -52,3 +51,4 @@ class HopDataset(IterableDataset):
 
             for objId in distributeIds(self.case_list, num_workers, worker_id):
                 yield from ObjectId2Tensors(objId)
+
