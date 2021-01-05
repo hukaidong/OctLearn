@@ -26,9 +26,13 @@ CPU = "cpu"
 
 
 def main():
-    configs = dict(device=torch.device(CUDA), latent_size=1000, load_pretrained=True, model_path=None, batch_size=128,
-                   num_workers=8, step_per_epoch=100, collate_fn=None, load_pretrained_mask=(1, 1, 0))
+    task_train_autoencoder = dict(device=torch.device(CUDA), latent_size=20, load_pretrained=False, model_path=None,
+                               batch_size=128, num_workers=8, step_per_epoch=100, collate_fn=None)
+    task_train_decipher = dict(device=torch.device(CUDA), latent_size=100, load_pretrained=True, model_path=None,
+                               batch_size=128, num_workers=8, step_per_epoch=100, collate_fn=None,
+                               load_pretrained_mask=(1, 1, 0))
 
+    configs = task_train_autoencoder
     components = dict(image_preprocessor=Features2TaskTensors, param_preprocessor=Features2ParamTensors,
                       image_encoder=(Encoder, ImgToFlatNetwork),
                       image_decoder=(Decoder, FlatToImgNetwork, ImgToImgDisturbNetwork),
@@ -52,9 +56,8 @@ def main():
     writer = SummaryWriter()
     print("Training begin.")
 
-    verify_loss = trainer.autoencoder.score()
-    print("loss from already trained autoencoder: %f" % verify_loss)
-
+    autoencoder_train(trainer, writer)
+    trainer.dump()
     decipher_train(trainer, writer)
     trainer.dump()
 

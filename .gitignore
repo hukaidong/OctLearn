@@ -131,3 +131,4 @@ dmypy.json
 # runtime records
 runs/
 .torchfile
+*.torchfile

@@ -79,7 +79,6 @@ class TrainingHost:
 
         if decipher_optimizer:
             lr_sched_cls, lr_sched_opts = decipher_lr_scheduler
-            self._autoencoder_lr_sched = lr_sched_cls(self._autoencoder_optimizer, **lr_sched_opts)
             self._decipher_lr_sched = lr_sched_cls(self._decipher_optimizer, **lr_sched_opts)
 
         def autoencoderDataIter():
