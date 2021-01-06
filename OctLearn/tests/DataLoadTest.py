@@ -1,11 +1,12 @@
-from octLearn.f.data_from_sources import RawData
-from octLearn.f.data_rasterized import RasterizeData
-from matplotlib import pyplot as plt
-
-import numpy as np
 import os
 import pickle
 import unittest
+
+import numpy as np
+from matplotlib import pyplot as plt
+
+from octLearn.f.data_from_sources import RawData
+from octLearn.f.data_rasterized import RasterizeData
 
 
 # noinspection PyMissingConstructor

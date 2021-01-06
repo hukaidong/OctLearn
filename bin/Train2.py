@@ -1,6 +1,5 @@
 from os import environ as ENV
 
-import torch
 from torch.optim import SGD, Adam
 from torch.optim.lr_scheduler import CyclicLR, ExponentialLR
 from torch.utils.tensorboard import SummaryWriter
@@ -10,6 +9,7 @@ from octLearn.autoencoder.autoencoder import Encoder, Decoder
 from octLearn.autoencoder.convnet import FlatToFlatNetwork, FlatToImgNetwork, ImgToFlatNetwork, ImgToImgDisturbNetwork
 from octLearn.autoencoder.radiencoder import RateDistortionAutoencoder
 from octLearn.connector.dbRecords import MongoInstance, MongoOffline
+from octLearn.e.config import update_config
 from octLearn.f.torch_dataset import HopDataset
 from octLearn.g.TrainingHost import TrainingHost
 from octLearn.utils import RandSeeding, WeightInitializer
@@ -19,20 +19,20 @@ from octLearn.utils import RandSeeding, WeightInitializer
 # ENV['MongoRoot'] = '/path/to/MongoDB/dumps'
 
 EPOCH_MAX = 800
-MONGO_ADAPTER = MongoInstance  # [ MongoInstance, MongoOffline ]
 
 CUDA = "cuda:0"
 CPU = "cpu"
 
+configs = dict(
+    device=CUDA, latent_size=20, load_pretrained=False,
+    batch_size=128, num_workers=8, step_per_epoch=100,
+    mongo_adapter=MongoOffline  # [ MongoInstance, MongoOffline ]
+)
+config_disabled = dict(model_path=None, collate_fn=None, load_pretrained_mask=(1, 1, 0))
+
 
 def main():
-    task_train_autoencoder = dict(device=torch.device(CUDA), latent_size=20, load_pretrained=False, model_path=None,
-                               batch_size=128, num_workers=8, step_per_epoch=100, collate_fn=None)
-    task_train_decipher = dict(device=torch.device(CUDA), latent_size=100, load_pretrained=True, model_path=None,
-                               batch_size=128, num_workers=8, step_per_epoch=100, collate_fn=None,
-                               load_pretrained_mask=(1, 1, 0))
-
-    configs = task_train_autoencoder
+    update_config(configs)
     components = dict(image_preprocessor=Features2TaskTensors, param_preprocessor=Features2ParamTensors,
                       image_encoder=(Encoder, ImgToFlatNetwork),
                       image_decoder=(Decoder, FlatToImgNetwork, ImgToImgDisturbNetwork),
@@ -45,7 +45,7 @@ def main():
                       decipher_lr_scheduler=(ExponentialLR, dict(gamma=0.98)), )
 
     RandSeeding()
-    db = MONGO_ADAPTER('learning', 'completed')
+    db = configs['mongo_adapter']('learning', 'completed')
     dataset = HopDataset(db.Case_Ids())
 
     trainer = TrainingHost(configs)
@@ -57,9 +57,10 @@ def main():
     print("Training begin.")
 
     autoencoder_train(trainer, writer)
-    trainer.dump()
+    trainer.dump(dump_mask=configs.get('dump_mask', None))
+
     decipher_train(trainer, writer)
-    trainer.dump()
+    trainer.dump(dump_mask=configs.get('dump_mask', None))
 
 
 def autoencoder_train(trainer, writer):

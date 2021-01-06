@@ -5,7 +5,8 @@ from os import environ as ENV, path
 
 import numpy
 
-from octLearn.connector.dbRecords import MongoInstance
+from octLearn.connector.dbRecords import MongoInstance, MongoOffline
+from octLearn.e.config import get_config
 from octLearn.f.data_rasterized import RasterizeData
 
 
@@ -24,7 +25,13 @@ def ObjectId2Feature(objectId: str):
         pass
 
     if target is None:
-        mongo = MongoInstance('learning', 'completed')
+        configs = get_config()
+        if configs['misc']['mongo_adapter'] == 'MongoInstance':
+            MongoRecord = MongoInstance
+        else:
+            MongoRecord = MongoOffline
+
+        mongo = MongoRecord('learning', 'completed')
         doc = mongo.Case_By_id(objectId)
         target = extract_feature(doc)
     return target

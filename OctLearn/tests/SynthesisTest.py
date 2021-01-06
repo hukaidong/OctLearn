@@ -1,10 +1,8 @@
-import numpy as np
-import numpy.testing as npt
-import matplotlib as mpl
-from matplotlib import pyplot as plt
-import unittest
 import pickle
+import unittest
 from pathlib import Path
+
+from matplotlib import pyplot as plt
 from octLearn.connector.TrajectoryEncodes import *
 
 SAMPLEOBJID = '5fc0b4ae4478ded555ed390b'

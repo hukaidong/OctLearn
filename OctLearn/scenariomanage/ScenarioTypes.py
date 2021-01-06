@@ -6,8 +6,8 @@ from typing import List
 
 import matplotlib.pyplot as plt
 import numpy as np
-
 from octLearn.connector.TrajectoryReader import readTrajectory
+
 from octLearn.f.graphic import translate_and_crop, RectangleRepXY
 
 

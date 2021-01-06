@@ -1,10 +1,11 @@
 import unittest
-import numpy as np
 
-from octLearn.f.graphic import translate_and_crop
+import numpy as np
+from matplotlib import pyplot as plt
 from numpy import random as npr
 from numpy import testing as npt
-from matplotlib import pyplot as plt
+
+from octLearn.f.graphic import translate_and_crop
 
 
 def plot_image(img_a, img_b):

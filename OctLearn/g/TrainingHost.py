@@ -83,7 +83,8 @@ class TrainingHost:
 
         def autoencoderDataIter():
             data_loader = DataLoader(dataset, batch_size=self.config['batch_size'],
-                                     num_workers=self.config['num_workers'],  collate_fn=self.config['collate_fn'],
+                                     num_workers=self.config['num_workers'],
+                                     collate_fn=self.config.get('collate_fn', None),
                                      pin_memory=True)
             while True:
                 for x in data_loader:
@@ -91,7 +92,8 @@ class TrainingHost:
 
         def decipherDataIter():
             data_loader = DataLoader(dataset, batch_size=self.config['batch_size'],
-                                     num_workers=self.config['num_workers'],  collate_fn=self.config['collate_fn'],
+                                     num_workers=self.config['num_workers'],
+                                     collate_fn=self.config.get('collate_fn', None),
                                      pin_memory=True)
             while True:
                 for x in data_loader:
@@ -138,7 +140,9 @@ class TrainingHost:
                                      optimizer=self._decipher_optimizer, lr_scheduler=self._decipher_lr_sched,
                                      monitor=decipherMonitor, host=self)
 
-    def load(self, _format="%s.torchfile", load_mask=(1, 1, 1)):
+    def load(self, _format="%s.torchfile", load_mask=None):
+        load_mask = None or [1, 1, 1]
+
         if load_mask[0]:
             self._img_encoder.load_state_dict(torch.load(_format % "img-encoder"))
         if load_mask[1]:
@@ -146,7 +150,9 @@ class TrainingHost:
         if load_mask[2]:
             self._parm_decipher.load_state_dict(torch.load(_format % "parm-decipher"))
 
-    def dump(self, _format="%s.torchfile", dump_mask=(1, 1, 1)):
+    def dump(self, _format="%s.torchfile", dump_mask=None):
+        dump_mask = dump_mask or [1, 1, 1]
+
         if dump_mask[0]:
             torch.save(self._img_encoder.state_dict(), _format % "img-encoder")
         if dump_mask[1]:
