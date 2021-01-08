@@ -5,8 +5,10 @@ from os import environ as ENV, path
 
 import numpy
 
-from octLearn.connector.dbRecords import MongoInstance, MongoOffline
+from octLearn.connector.mongo_instance import MongoInstance
+from octLearn.connector.mongo_offline import MongoOffline
 from octLearn.e.config import get_config
+from octLearn.f.agent_parameters import NormalizeAgentParameters
 from octLearn.f.data_rasterized import RasterizeData
 
 
@@ -37,23 +39,13 @@ def ObjectId2Feature(objectId: str):
     return target
 
 
-def GetAgentParameters(document):
-    agent_parameters = document['agent parameters']
-    params = numpy.zeros([len(agent_parameters), len(agent_parameters[0]['agent parameters'])])
-    parameter_means = numpy.array([1.2, 8.0, 90.0, 0.75])
-    for d in agent_parameters:
-        aid, par = d.values()
-        params[aid, :] = (par / parameter_means) - 1
-    return params
-
-
 def extract_feature(document, save_result=True):
     FeatRoot = ENV['FeatRoot']
     rasterized = RasterizeData(document)
 
     objId = str(document['_id'])
 
-    feature = dict(aid=objId, agtparm=GetAgentParameters(document), cubevis=rasterized.compact_obstacle_map(),
+    feature = dict(aid=objId, agtparm=NormalizeAgentParameters(document), cubevis=rasterized.compact_obstacle_map(),
                    taskvis=rasterized.compact_task_map(), trajvis=rasterized.compact_trajectory_map(), )
 
     if save_result:

@@ -1,8 +1,11 @@
 import torch
 from torch.utils.data.dataloader import DataLoader
 
-from octLearn.autoencoder.autoencoder import Autoencoder, Decipher
+from octLearn.h.autoencoder import Autoencoder
+from octLearn.h.decipher import Decipher
+from octLearn.h.activate_learn import QueryNetwork
 from octLearn.g.TrainingUnit import TrainingUnit
+from octLearn.g.QueryUnit import QueryUnit
 
 
 class TrainingHost:
@@ -56,6 +59,8 @@ class TrainingHost:
         self._policy = policy_cls(latent_size, **policy_opts).to(device)
         self._autoencoder_network = Autoencoder(self._img_encoder, self._img_decoder, self._policy).to(device)
         self._decipher_network = Decipher(self._img_encoder, self._parm_decipher).to(device)
+        self._query_network = QueryNetwork(latent_size, self._parm_decipher).to(device)
+
         if weight_initializer:
             weight_init_fn, *_ = weight_initializer
             self._img_encoder.apply(weight_init_fn)
@@ -139,6 +144,8 @@ class TrainingHost:
         self.decipher = TrainingUnit(data_iter=decipherDataIter(), consumer=self._decipher_network,
                                      optimizer=self._decipher_optimizer, lr_scheduler=self._decipher_lr_sched,
                                      monitor=decipherMonitor, host=self)
+
+        self.requester = QueryUnit(self._query_network)
 
     def load(self, _format="%s.torchfile", load_mask=None):
         load_mask = None or [1, 1, 1]

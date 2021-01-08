@@ -1,7 +1,7 @@
 import numpy as np
 from matplotlib import pyplot as plt
 
-from octLearn.connector.dbRecords import MongoInstance
+from octLearn.connector.mongo_instance import MongoInstance
 from octLearn.scenariomanage.ScenarioTypes import ScenarioType3
 
 case_id = '5f85acee767dae76c6c9bf14'

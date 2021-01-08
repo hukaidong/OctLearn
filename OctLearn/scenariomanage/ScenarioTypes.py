@@ -115,7 +115,7 @@ class ScenarioType3(ScenarioType1):
 
 
 if __name__ == '__main__':
-    from octLearn.connector.dbRecords import MongoInstance
+    from octLearn.connector.mongo_instance import MongoInstance
 
 
     cc = MongoInstance('learning', 'complete')
