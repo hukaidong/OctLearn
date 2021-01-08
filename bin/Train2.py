@@ -1,22 +1,27 @@
 from os import environ as ENV
 
 from torch.optim import SGD, Adam
-from torch.optim.lr_scheduler import CyclicLR, ExponentialLR
+from torch.optim.lr_scheduler import ExponentialLR
 from torch.utils.tensorboard import SummaryWriter
 
 from octLearn.autoencoder.TaskSynthesis import Features2TaskTensors, Features2ParamTensors
-from octLearn.autoencoder.autoencoder import Encoder, Decoder
 from octLearn.autoencoder.convnet import FlatToFlatNetwork, FlatToImgNetwork, ImgToFlatNetwork, ImgToImgDisturbNetwork
 from octLearn.autoencoder.radiencoder import RateDistortionAutoencoder
-from octLearn.connector.dbRecords import MongoInstance, MongoOffline
+from octLearn.connector.mongo_instance import MongoInstance
+from octLearn.connector.mongo_offline import MongoOffline
 from octLearn.e.config import update_config
 from octLearn.f.torch_dataset import HopDataset
+from octLearn.f.agent_parameters import DenormalizeAgentParameters
 from octLearn.g.TrainingHost import TrainingHost
+from octLearn.h.decoder import Decoder
+from octLearn.h.encoder import Encoder
+
 from octLearn.utils import RandSeeding, WeightInitializer
 
 # ENV['FeatRoot'] = '/path/to/features'
 # ENV['TrajRoot'] = '/path/to/trajectories'
 # ENV['MongoRoot'] = '/path/to/MongoDB/dumps'
+
 
 EPOCH_MAX = 800
 
@@ -24,9 +29,10 @@ CUDA = "cuda:0"
 CPU = "cpu"
 
 configs = dict(
-    device=CUDA, latent_size=20, load_pretrained=False,
+    device=CUDA, latent_size=50, load_pretrained=True,
     batch_size=128, num_workers=8, step_per_epoch=100,
-    mongo_adapter=MongoOffline  # [ MongoInstance, MongoOffline ]
+    mongo_adapter=MongoInstance,  # [ MongoInstance, MongoOffline ]
+
 )
 config_disabled = dict(model_path=None, collate_fn=None, load_pretrained_mask=(1, 1, 0))
 
@@ -40,9 +46,10 @@ def main():
                       autoencoder_policy=(RateDistortionAutoencoder, dict(lambda0=1, lambda1=0.001)),
                       weight_initializer=(WeightInitializer,),
                       autoencoder_optimizer=(SGD, dict(lr=0.01, weight_decay=0.002)),
-                      autoencoder_lr_scheduler=(CyclicLR, dict(base_lr=0.01, max_lr=0.1, step_size_up=EPOCH_MAX // 10)),
+                      autoencoder_lr_scheduler=(ExponentialLR, dict(gamma=0.98)),
+                      #autoencoder_lr_scheduler=(CyclicLR, dict(base_lr=0.01, max_lr=0.1, step_size_up=EPOCH_MAX // 10)),
                       decipher_optimizer=(Adam, dict(lr=0.1, weight_decay=0.002)),
-                      decipher_lr_scheduler=(ExponentialLR, dict(gamma=0.98)), )
+                      decipher_lr_scheduler=(ExponentialLR, dict(gamma=0.98)))
 
     RandSeeding()
     db = configs['mongo_adapter']('learning', 'completed')
@@ -51,7 +58,7 @@ def main():
     trainer = TrainingHost(configs)
     trainer.build_network(dataset, **components)
     if configs['load_pretrained']:
-        trainer.load(load_mask=configs['load_pretrained_mask'])
+        trainer.load(load_mask=configs.get('load_pretrained_mask', None))
 
     writer = SummaryWriter()
     print("Training begin.")
