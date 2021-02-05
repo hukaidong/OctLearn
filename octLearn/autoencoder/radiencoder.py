@@ -8,7 +8,7 @@ def isnan(tensor):
     return torch.any(torch.isnan(tensor))
 
 
-EPSILON = 1e-6
+EPSILON = 1e-5
 
 
 # Referred from paper: https://arxiv.org/abs/1910.04329
@@ -28,7 +28,7 @@ class RateDistortionAutoencoder(nn.Module):
         d_x_xp = torch.pow(x - xpred, 2).mean(dims)
         d_xp_xd = torch.pow(xpred - xdist, 2).mean(dims)
         log_p_z = self.log_p_z(self.p_z_loc, self.p_z_scale, z).mean(-1)
-        log_d_x = torch.log(d_x_xp + 0.01 * s_x_xp + EPSILON)
+        log_d_x = torch.log(d_x_xp + 0.5 * s_x_xp + EPSILON)
 
         self.last_states = {'d_x_xp': d_x_xp, 'log_d_x': log_d_x, 'd_xp_xd': d_xp_xd, 'log_p_z': log_p_z, 'x': x,
                             'xpred': xpred, 'z':z}

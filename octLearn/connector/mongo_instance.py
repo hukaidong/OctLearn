@@ -3,14 +3,20 @@ import pymongo
 import pymongo.collection
 import pymongo.database
 
+from octLearn.e.config import get_config
+
 
 class MongoInstance:
     client: pymongo.MongoClient
     db: pymongo.database.Database
     col: pymongo.collection.Collection
 
-    def __init__(self, database, collection):
+    def __init__(self, database=None, collection=None):
         self.client = pymongo.MongoClient()
+        if None in (database, collection):
+            configs = get_config()
+            database = configs['misc']['database']
+            collection = configs['misc']['collection']
         self.db = self.client[database]
         self.col = self.db[collection]
 

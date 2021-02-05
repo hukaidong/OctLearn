@@ -22,7 +22,8 @@ class ImgToFlatNetwork(nn.Module):
             nn.Flatten(),
             nn.Linear(10 * 13 * 13, 10 * 13 * 13),
             nn.ReLU(True),
-            nn.Linear(10 * 13 * 13, output_size)
+            nn.Linear(10 * 13 * 13, output_size),
+            # nn.ReLU(True)
         )
         self.net = nn.Sequential(*modules)
 
@@ -81,9 +82,18 @@ class FlatToFlatNetwork(nn.Module):
             nn.Linear(input_size, hidden_size), nn.ReLU(True),
             nn.Linear(hidden_size, hidden_size), nn.ReLU(True),
             nn.Linear(hidden_size, hidden_size), nn.ReLU(True),
+            nn.Linear(hidden_size, hidden_size), nn.ReLU(True),
+            nn.Linear(hidden_size, hidden_size), nn.ReLU(True),
             nn.Linear(hidden_size, output_size)
         ]
         self.net = nn.Sequential(*modules)
 
     def forward(self, _input):
         return self.net(_input)
+
+
+if __name__ == '__main__':
+    import torch
+    net = FlatToFlatNetwork(10, 10)
+    tensor = torch.normal(0, 1, size=[10, 10])
+    print(net(tensor))

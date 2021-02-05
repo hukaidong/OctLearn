@@ -12,7 +12,7 @@ from octLearn.f.agent_parameters import NormalizeAgentParameters
 from octLearn.f.data_rasterized import RasterizeData
 
 
-@lru_cache(maxsize=100)
+@lru_cache(maxsize=None)
 def ObjectId2Feature(objectId: str):
     FeatRoot = ENV['FeatRoot']
     objTail = objectId[-2:]
@@ -33,13 +33,14 @@ def ObjectId2Feature(objectId: str):
         else:
             MongoRecord = MongoOffline
 
-        mongo = MongoRecord('learning', 'completed')
+        mongo = MongoRecord()
         doc = mongo.Case_By_id(objectId)
         target = extract_feature(doc)
     return target
 
 
 def extract_feature(document, save_result=True):
+    assert document is not None
     FeatRoot = ENV['FeatRoot']
     rasterized = RasterizeData(document)
 

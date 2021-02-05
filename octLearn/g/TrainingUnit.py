@@ -12,21 +12,25 @@ class TrainingUnit:
         self._optimizer = optimizer
         self._monitor = monitor
         self._lr_scheduler = lr_scheduler
-        self._step_max = host.config['step_per_epoch']
+        self._step_max = lambda: host.config['step_per_epoch']
         self._device = host.config['device']
+
+    def set_data_iter(self, data_iter):
+        self._data_iter = data_iter
 
     def loopTrain(self, summary_writer=None):
         loss = 0
         stepTrain = self.stepTrain()
         for epoch_num in rangeForever():
-            self._consumer.train()
-            for i in range(self._step_max):
+            # self._consumer.train()
+            for i in range(self._step_max()):
                 loss = next(stepTrain)
 
-            self._lr_scheduler.step()
+            if self._lr_scheduler:
+                self._lr_scheduler.step()
             if summary_writer:
                 self._monitor(summary_writer, epoch_num)
-            self._consumer.eval()
+            # self._consumer.eval()
             yield loss
 
     def stepTrain(self, alt_training=False):
@@ -35,7 +39,7 @@ class TrainingUnit:
                 self._consumer.train()
             tensorIn = tensorIn.to(self._device)
             tensorOut = tensorOut.to(self._device)
-            self._consumer.zero_grad()
+            self._optimizer.zero_grad()
             loss = self._consumer.compute_loss(tensorIn, tensorOut)
             loss.backward()
             self._optimizer.step()

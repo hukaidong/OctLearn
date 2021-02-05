@@ -13,8 +13,9 @@ class QueryNetwork(nn.Module):
         self.device = device
         return super().to(device)
 
-    def train(self, *args, **kwargs):
-        raise RuntimeError("Module is not trainable")
+    def train(self, mode, **kwargs):
+        if mode is True:
+            raise RuntimeError("Module is not trainable")
 
     def eval(self):
         super().eval()
@@ -22,4 +23,5 @@ class QueryNetwork(nn.Module):
 
     def forward(self, num_sample):
         latent = normal(0, 1, size=[num_sample, self.latent_size], device=self.device)
-        return self.decipher(latent)
+        sample = self.decipher(latent)
+        return sample

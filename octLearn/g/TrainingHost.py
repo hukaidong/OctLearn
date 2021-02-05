@@ -14,6 +14,7 @@ class TrainingHost:
         self.config = configs
         self.autoencoder = None
         self.decipher = None
+        self.requester = None
 
         self._data_loader = None
         self._img_encoder = None
@@ -26,6 +27,8 @@ class TrainingHost:
         self._decipher_lr_sched = None
         self._autoencoder_network = None
         self._decipher_network = None
+        self._data_image_extractor = None
+        self._data_param_extractor = None
 
     def build_network(self, dataset, *, image_preprocessor, param_preprocessor, image_encoder, image_decoder,
                       param_decipher, autoencoder_policy, weight_initializer=None, autoencoder_optimizer=None,
@@ -35,10 +38,10 @@ class TrainingHost:
 
         data_sample = [d.unsqueeze(0) for d in dataset[0]]
 
-        data_image_extractor = image_preprocessor()
-        data_param_extractor = param_preprocessor()
-        imageI, imageO = data_image_extractor(data_sample)
-        imageI, paramO = data_param_extractor(data_sample)
+        self._data_image_extractor = image_preprocessor()
+        self._data_param_extractor = param_preprocessor()
+        imageI, imageO = self._data_image_extractor(data_sample)
+        imageI, paramO = self._data_param_extractor(data_sample)
 
         input_channels = imageI.shape[1]
         output_channels = imageO.shape[1]
@@ -82,7 +85,7 @@ class TrainingHost:
             lr_sched_cls, lr_sched_opts = autoencoder_lr_scheduler
             self._autoencoder_lr_sched = lr_sched_cls(self._autoencoder_optimizer, **lr_sched_opts)
 
-        if decipher_optimizer:
+        if decipher_lr_scheduler:
             lr_sched_cls, lr_sched_opts = decipher_lr_scheduler
             self._decipher_lr_sched = lr_sched_cls(self._decipher_optimizer, **lr_sched_opts)
 
@@ -93,7 +96,7 @@ class TrainingHost:
                                      pin_memory=True)
             while True:
                 for x in data_loader:
-                    yield data_image_extractor(x)
+                    yield self._data_image_extractor(x)
 
         def decipherDataIter():
             data_loader = DataLoader(dataset, batch_size=self.config['batch_size'],
@@ -102,7 +105,7 @@ class TrainingHost:
                                      pin_memory=True)
             while True:
                 for x in data_loader:
-                    yield data_param_extractor(x)
+                    yield self._data_param_extractor(x)
 
         def autoencoderMonitor(summary_writer, step):
             current_lr = self._autoencoder_lr_sched.get_last_lr()[-1]
@@ -121,9 +124,10 @@ class TrainingHost:
                 summary_writer.add_image("autoencoder/norm-%d" % i, img_norm, step)
 
         def decipherMonitor(summary_writer, step):
-            current_lr = self._decipher_lr_sched.get_last_lr()[-1]
+            if self._decipher_lr_sched:
+                current_lr = self._decipher_lr_sched.get_last_lr()[-1]
+                summary_writer.add_scalar("decipher/lr", current_lr, step)
             states = self._decipher_network.last_states
-            summary_writer.add_scalar("decipher/lr", current_lr, step)
             summary_writer.add_scalar("decipher/mean_loss", states['mean_loss'], step)
             for i in range(3):
                 img_in = states['img_input'][i]
@@ -147,8 +151,8 @@ class TrainingHost:
 
         self.requester = QueryUnit(self._query_network)
 
-    def load(self, _format="%s.torchfile", load_mask=None):
-        load_mask = None or [1, 1, 1]
+    def load(self, load_mask=None, _format="%s.torchfile"):
+        load_mask = load_mask or [1, 1, 1]
 
         if load_mask[0]:
             self._img_encoder.load_state_dict(torch.load(_format % "img-encoder"))
@@ -166,3 +170,25 @@ class TrainingHost:
             torch.save(self._img_decoder.state_dict(), _format % "img-decoder")
         if dump_mask[2]:
             torch.save(self._parm_decipher.state_dict(), _format % "parm-decipher")
+
+    def refresh_dataset(self, dataset):
+        def autoencoderDataIter():
+            data_loader = DataLoader(dataset, batch_size=self.config['batch_size'],
+                                     num_workers=self.config['num_workers'],
+                                     collate_fn=self.config.get('collate_fn', None),
+                                     pin_memory=True)
+            while True:
+                for x in data_loader:
+                    yield self._data_image_extractor(x)
+
+        def decipherDataIter():
+            data_loader = DataLoader(dataset, batch_size=self.config['batch_size'],
+                                     num_workers=self.config['num_workers'],
+                                     collate_fn=self.config.get('collate_fn', None),
+                                     pin_memory=True)
+            while True:
+                for x in data_loader:
+                    yield self._data_param_extractor(x)
+
+        self.autoencoder.set_data_iter(autoencoderDataIter())
+        self.decipher.set_data_iter(decipherDataIter())

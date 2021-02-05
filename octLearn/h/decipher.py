@@ -9,19 +9,18 @@ class Decipher(nn.Module):
         self.decipher = decipher
         self.last_states = None
 
-    def train(self, *args, **kwargs):
-        super().train(*args, **kwargs)
-        self.encoder.eval()
-        self.decipher.train()
-
-    def eval(self):
-        super().eval()
-        self.encoder.eval()
-        self.decipher.eval()
+    def train(self, mode=True):
+        super(Decipher, self).train(mode)
+        if mode:
+            self.encoder.eval()
+            self.decipher.train()
+        else:
+            self.encoder.eval()
+            self.decipher.eval()
 
     def forward(self, img_input):
         latent = self.encoder(img_input)
-        return self.decipher(latent)
+        return self.decipher(latent.detach())
 
     def compute_loss(self, img_input, parms_output):
         latent = self.encoder(img_input)

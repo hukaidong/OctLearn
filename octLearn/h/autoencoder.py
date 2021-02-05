@@ -19,4 +19,3 @@ class Autoencoder(nn.Module):
         loss = self.policy(latent, img_output, img_pred, img_dist)
         return loss.mean()
 
-
