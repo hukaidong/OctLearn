@@ -3,7 +3,7 @@ from torch import nn
 
 class ImgToFlatNetwork(nn.Module):
     # TODO: Make image network independent to its size
-    def __init__(self, input_channels, output_size):
+    def __init__(self, input_channels, output_size, dropout=False):
         super().__init__()
         hidden_channels = 10
         modules = (
@@ -33,7 +33,7 @@ class ImgToFlatNetwork(nn.Module):
 
 class FlatToImgNetwork(nn.Module):
     # TODO: Make image network independent to its size
-    def __init__(self, input_size, output_channels):
+    def __init__(self, input_size, output_channels, dropout=False):
         super().__init__()
         hidden_channels = 10
         modules = [
@@ -75,7 +75,7 @@ class ImgToImgDisturbNetwork(nn.Module):
 
 
 class FlatToFlatNetwork(nn.Module):
-    def __init__(self, input_size, output_size):
+    def __init__(self, input_size, output_size, dropout=False):
         super().__init__()
         hidden_size = 1024
         modules = [

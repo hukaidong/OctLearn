@@ -1,12 +1,12 @@
 from os import environ as ENV
 
-from torch.optim import SGD, Adam, RMSprop
-from torch.optim.lr_scheduler import ExponentialLR, CyclicLR, StepLR
+from torch.optim import SGD
+from torch.optim.lr_scheduler import ExponentialLR
 from torch.utils.tensorboard import SummaryWriter
 
-from octLearn.autoencoder.TaskSynthesis import Features2TaskTensors, Features2ParamTensors
-from octLearn.autoencoder.convnet import FlatToFlatNetwork, FlatToImgNetwork, ImgToFlatNetwork, ImgToImgDisturbNetwork
-from octLearn.autoencoder.radiencoder import RateDistortionAutoencoder
+from octLearn.m.image_process import Features2TaskTensors, Features2ParamTensors
+from octLearn.n.convnet import FlatToFlatNetwork, FlatToImgNetwork, ImgToFlatNetwork, ImgToImgDisturbNetwork
+from octLearn.n.radiencoder import RateDistortionAutoencoder
 from octLearn.connector.mongo_instance import MongoInstance
 from octLearn.connector.mongo_offline import MongoOffline
 from octLearn.e.config import update_config
@@ -34,11 +34,13 @@ configs = dict(device=CUDA, latent_size=400, num_workers=8, step_per_epoch=1000,
                )
 config_disabled = dict(model_path=None, collate_fn=None, load_pretrained_mask=(1, 1, 0))
 
-components = dict(image_preprocessor=Features2TaskTensors, param_preprocessor=Features2ParamTensors,
+components = dict(image_preprocessor=Features2TaskTensors,
+                  param_preprocessor=Features2ParamTensors,
                   image_encoder=(Encoder, ImgToFlatNetwork),
                   image_decoder=(Decoder, FlatToImgNetwork, ImgToImgDisturbNetwork),
                   param_decipher=(FlatToFlatNetwork,),
-                  autoencoder_policy=(RateDistortionAutoencoder, dict(lambda0=1, lambda1=0.001)),
+                  autoencoder_policy=(RateDistortionAutoencoder,
+                                      dict(lambda0=1, lambda1=0.001, lambda2=0.01, lambda3=0.5)),
                   weight_initializer=(WeightInitializer,),
                   autoencoder_optimizer=(SGD, dict(lr=0.01, weight_decay=0.002)),
                   autoencoder_lr_scheduler=(ExponentialLR, dict(gamma=0.99)),
