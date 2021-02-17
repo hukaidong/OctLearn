@@ -1,3 +1,5 @@
+import torch
+
 def rangeForever():
     num = 0
     while True:
@@ -49,8 +51,9 @@ class TrainingUnit:
 
     def score(self):
         for tensorIn, tensorOut in self._data_iter:
-            self._consumer.eval()
-            tensorIn = tensorIn.to(self._device)
-            tensorOut = tensorOut.to(self._device)
-            loss = self._consumer.compute_loss(tensorIn, tensorOut)
-            return loss
+            with torch.no_grad():
+                self._consumer.eval()
+                tensorIn = tensorIn.to(self._device)
+                tensorOut = tensorOut.to(self._device)
+                loss = self._consumer.compute_loss(tensorIn, tensorOut)
+                return loss

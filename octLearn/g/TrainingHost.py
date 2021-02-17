@@ -32,7 +32,7 @@ class TrainingHost:
 
     def build_network(self, dataset, *, image_preprocessor, param_preprocessor, image_encoder, image_decoder,
                       param_decipher, autoencoder_policy, weight_initializer=None, autoencoder_optimizer=None,
-                      autoencoder_lr_scheduler=None, decipher_optimizer=None, decipher_lr_scheduler=None ):
+                      autoencoder_lr_scheduler=None, decipher_optimizer=None, decipher_lr_scheduler=None):
 
         device = self.config['device']
 
@@ -92,8 +92,7 @@ class TrainingHost:
         def autoencoderDataIter():
             data_loader = DataLoader(dataset, batch_size=self.config['batch_size'],
                                      num_workers=self.config['num_workers'],
-                                     collate_fn=self.config.get('collate_fn', None),
-                                     pin_memory=True)
+                                     collate_fn=self.config.get('collate_fn', None), pin_memory=True)
             while True:
                 for x in data_loader:
                     yield self._data_image_extractor(x)
@@ -101,8 +100,7 @@ class TrainingHost:
         def decipherDataIter():
             data_loader = DataLoader(dataset, batch_size=self.config['batch_size'],
                                      num_workers=self.config['num_workers'],
-                                     collate_fn=self.config.get('collate_fn', None),
-                                     pin_memory=True)
+                                     collate_fn=self.config.get('collate_fn', None), pin_memory=True)
             while True:
                 for x in data_loader:
                     yield self._data_param_extractor(x)
@@ -141,11 +139,14 @@ class TrainingHost:
             for i in range(parm_losses.shape[1]):
                 summary_writer.add_histogram("decipher/loss-param-%d" % i, states['loss'][:, i], step)
 
-        self.autoencoder = TrainingUnit(data_iter=autoencoderDataIter(), consumer=self._autoencoder_network,
+        self._autoencoder_data_iter = autoencoderDataIter()
+        self._decipher_data_iter = decipherDataIter()
+
+        self.autoencoder = TrainingUnit(data_iter=self._autoencoder_data_iter, consumer=self._autoencoder_network,
                                         optimizer=self._autoencoder_optimizer, lr_scheduler=self._autoencoder_lr_sched,
                                         monitor=autoencoderMonitor, host=self)
 
-        self.decipher = TrainingUnit(data_iter=decipherDataIter(), consumer=self._decipher_network,
+        self.decipher = TrainingUnit(data_iter=self._decipher_data_iter, consumer=self._decipher_network,
                                      optimizer=self._decipher_optimizer, lr_scheduler=self._decipher_lr_sched,
                                      monitor=decipherMonitor, host=self)
 
@@ -171,21 +172,24 @@ class TrainingHost:
         if dump_mask[2]:
             torch.save(self._parm_decipher.state_dict(), _format % "parm-decipher")
 
-    def refresh_dataset(self, dataset):
+    def refresh_dataset(self, dataset=None):
+        # Use for feeding extra dataset for cross-validation or test
+        # if refresh_dataset is called with no argument, resume working on training dataset
+        if dataset is None:
+            self.autoencoder.set_data_iter(self._autoencoder_data_iter)
+            self.decipher.set_data_iter(self._decipher_data_iter)
+            return
+
         def autoencoderDataIter():
-            data_loader = DataLoader(dataset, batch_size=self.config['batch_size'],
-                                     num_workers=self.config['num_workers'],
-                                     collate_fn=self.config.get('collate_fn', None),
-                                     pin_memory=True)
+            data_loader = DataLoader(dataset, batch_size=self.config['batch_size'], num_workers=0,
+                                     collate_fn=self.config.get('collate_fn', None), pin_memory=True)
             while True:
                 for x in data_loader:
                     yield self._data_image_extractor(x)
 
         def decipherDataIter():
-            data_loader = DataLoader(dataset, batch_size=self.config['batch_size'],
-                                     num_workers=self.config['num_workers'],
-                                     collate_fn=self.config.get('collate_fn', None),
-                                     pin_memory=True)
+            data_loader = DataLoader(dataset, batch_size=self.config['batch_size'], num_workers=0,
+                                     collate_fn=self.config.get('collate_fn', None), pin_memory=True)
             while True:
                 for x in data_loader:
                     yield self._data_param_extractor(x)

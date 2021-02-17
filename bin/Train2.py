@@ -27,8 +27,8 @@ EPOCH_MAX = 50
 CUDA = "cuda:0"
 CPU = "cpu"
 
-configs = dict(device=CUDA, latent_size=400, num_workers=8, step_per_epoch=1000, load_pretrained=False,
-               batch_size=125, database='learning', collection='completed',
+configs = dict(device=CUDA, latent_size=400, num_workers=8, step_per_epoch=1000, load_pretrained=True,
+               batch_size=125, database='eazy', collection='cross_valid',
                load_pretrained_mask=(1, 1, 1),
                mongo_adapter=MongoInstance,  # [ MongoInstance, MongoOffline ]
                )
@@ -43,7 +43,7 @@ components = dict(image_preprocessor=Features2TaskTensors,
                                       dict(lambda0=1, lambda1=0.001, lambda2=0.01, lambda3=0.5)),
                   weight_initializer=(WeightInitializer,),
                   autoencoder_optimizer=(SGD, dict(lr=0.01, weight_decay=0.002)),
-                  autoencoder_lr_scheduler=(ExponentialLR, dict(gamma=0.99)),
+                  autoencoder_lr_scheduler=(ExponentialLR, dict(gamma=0.95)),
                   # autoencoder_lr_scheduler=(CyclicLR, dict(base_lr=0.01, max_lr=0.1, step_size_up=EPOCH_MAX // 4)),
                   decipher_optimizer=(SGD, dict(lr=0.01, weight_decay=1e-5)),
                   # decipher_lr_scheduler=(StepLR, dict(step_size=1, gamma=0.99))
@@ -55,26 +55,24 @@ def main():
 
     RandSeeding()
 
-    db = configs['mongo_adapter']('learning', 'completed')
-    dataset = HopDataset(db.Case_Ids()[:50])
+    db = configs['mongo_adapter']()
+    dataset = HopDataset(db.Case_Ids())
     trainer = TrainingHost(configs)
     trainer.build_network(dataset, **components)
     if configs['load_pretrained']:
         print("loading pretrained networks.")
-        trainer.load(load_mask=configs.get('load_pretrained_mask', None), _format="%s-test.torchfile")
+        trainer.load(load_mask=configs.get('load_pretrained_mask', None), _format="%s.torchfile")
 
     writer = SummaryWriter()
-    # writer = None
     print("Training begin.")
+
     print(trainer.autoencoder.score())
-
-    autoencoder_train(trainer, writer)
-    trainer.dump(dump_mask=configs.get('dump_mask', None))
-
-    # trainer.decipher.score()
-    decipher_train(trainer, writer)
     print(trainer.decipher.score())
-    trainer.dump(dump_mask=configs.get('dump_mask', None))
+    # autoencoder_train(trainer, writer)
+    # trainer.dump(dump_mask=configs.get('dump_mask', None))
+
+    # decipher_train(trainer, writer)
+    # trainer.dump(dump_mask=configs.get('dump_mask', None))
 
 
 def autoencoder_train(trainer, writer):
@@ -83,6 +81,8 @@ def autoencoder_train(trainer, writer):
         try:
             reward = next(train_task)
             print("Train step {} ends, loss: {}".format(step, float(reward)))
+            if step % 10 == 0:
+                trainer.dump("%s-ez-step{}.torchfile".format(step))
         except KeyboardInterrupt:
             continue
 
@@ -151,4 +151,4 @@ def implicit_used():
 
 
 if __name__ == '__main__':
-    exam()
+    main()

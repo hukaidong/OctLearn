@@ -4,7 +4,7 @@ import tkinter as tk
 
 from matplotlib import pyplot as plt
 from octLearn.connector.mongo_instance import MongoInstance
-from octLearn.scenariomanage.ScenarioTypes import ScenarioType2
+from bin.scenariomanage import ScenarioType2
 if __name__ == '__main__':
     mpl.use('Qt5agg')
     plt.ion()

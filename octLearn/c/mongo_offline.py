@@ -31,3 +31,7 @@ class MongoOffline:
 
     def find(self, *args, **kwargs):
         raise NotImplementedError()
+
+if __name__ == "__main__":
+    from octLearn.connector.mongo_instance import MongoInstance
+    db = MongoOffline("easy", "completed", dump_instance=MongoInstance("easy", "completed"))

@@ -13,7 +13,7 @@ from octLearn.f.data_rasterized import RasterizeData
 
 
 @lru_cache(maxsize=None)
-def ObjectId2Feature(objectId: str):
+def ObjectId2Feature(objectId: str, db=None):
     FeatRoot = ENV['FeatRoot']
     objTail = objectId[-2:]
     dirTarget = path.join(FeatRoot, objTail)
@@ -27,14 +27,15 @@ def ObjectId2Feature(objectId: str):
         pass
 
     if target is None:
-        configs = get_config()
-        if configs['misc']['mongo_adapter'] == 'MongoInstance':
-            MongoRecord = MongoInstance
-        else:
-            MongoRecord = MongoOffline
+        if db is None:
+            configs = get_config()
+            if configs['misc']['mongo_adapter'] == 'MongoInstance':
+                MongoRecord = MongoInstance
+            else:
+                MongoRecord = MongoOffline
 
-        mongo = MongoRecord()
-        doc = mongo.Case_By_id(objectId)
+            db = MongoRecord()
+        doc = db.Case_By_id(objectId)
         target = extract_feature(doc)
     return target
 

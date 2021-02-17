@@ -17,8 +17,8 @@ def distributeIds(data, num_workers, index):
         return
 
 
-def ObjectId2Tensors(objectId):
-    feat = ObjectId2Feature(objectId)
+def ObjectId2Tensors(objectId, db=None):
+    feat = ObjectId2Feature(objectId, db)
 
     raw_map = feat['cubevis']
     raw_tsk = feat['taskvis']
@@ -36,15 +36,19 @@ class HopDataset(IterableDataset):
             raise ValueError
         return next(ObjectId2Tensors(self.case_list[0]))
 
-    def __init__(self, case_list):
+    def __len__(self):
+        return len(self.case_list * 50)  # 50 trajectories per scenario
+
+    def __init__(self, case_list, from_database=None):
         super(HopDataset).__init__()
         self.case_list = case_list
+        self.db = from_database
 
     def __iter__(self):
         worker_info = torch.utils.data.get_worker_info()
         if worker_info is None:
             for objId in self.case_list:
-                yield from ObjectId2Tensors(objId)
+                yield from ObjectId2Tensors(objId, db=self.db)
         else:
             num_workers = worker_info.num_workers
             worker_id = worker_info.id
