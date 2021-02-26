@@ -1,3 +1,5 @@
+#!/bin/env python3
+
 from os import environ as ENV
 
 from torch.optim import SGD
@@ -7,8 +9,8 @@ from torch.utils.tensorboard import SummaryWriter
 from octLearn.m.image_process import Features2TaskTensors, Features2ParamTensors
 from octLearn.n.convnet import FlatToFlatNetwork, FlatToImgNetwork, ImgToFlatNetwork, ImgToImgDisturbNetwork
 from octLearn.n.radiencoder import RateDistortionAutoencoder
-from octLearn.connector.mongo_instance import MongoInstance
-from octLearn.connector.mongo_offline import MongoOffline
+from octLearn.c.mongo_instance import MongoInstance
+from octLearn.c.mongo_offline import MongoOffline
 from octLearn.e.config import update_config
 from octLearn.f.torch_dataset import HopDataset
 from octLearn.g.TrainingHost import TrainingHost
@@ -27,8 +29,8 @@ EPOCH_MAX = 50
 CUDA = "cuda:0"
 CPU = "cpu"
 
-configs = dict(device=CUDA, latent_size=400, num_workers=8, step_per_epoch=1000, load_pretrained=True,
-               batch_size=125, database='eazy', collection='cross_valid',
+configs = dict(device=CUDA, latent_size=400, num_workers=8, step_per_epoch=1000, load_pretrained=False,
+               batch_size=125, database='easy', collection='completed',
                load_pretrained_mask=(1, 1, 1),
                mongo_adapter=MongoInstance,  # [ MongoInstance, MongoOffline ]
                )

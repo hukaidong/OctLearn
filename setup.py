@@ -3,7 +3,7 @@ import setuptools
 setuptools.setup(
     name='OctLearn',
     version='1',
-    packages=['OctLearn', 'OctLearn.c'],
+    packages=['octLearn'],
     url='',
     license='',
     author='Kaidong Hu',

@@ -5,8 +5,8 @@ from os import environ as ENV, path
 
 import numpy
 
-from octLearn.connector.mongo_instance import MongoInstance
-from octLearn.connector.mongo_offline import MongoOffline
+from octLearn.c.mongo_instance import MongoInstance
+from octLearn.c.mongo_offline import MongoOffline
 from octLearn.e.config import get_config
 from octLearn.f.agent_parameters import NormalizeAgentParameters
 from octLearn.f.data_rasterized import RasterizeData
