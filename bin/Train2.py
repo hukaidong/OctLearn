@@ -34,7 +34,9 @@ reset_config()
 configs = dict(device=CUDA, latent_size=400, num_workers=8, step_per_epoch=1000, 
         batch_size=125, database='easy', collection='completed', load_pretrained_mask=(1, 1, 1), 
         mongo_adapter=MongoInstance, feat_root='/media/kaidong/Shared/easy/feature',
-        traj_root=None, mongo_root=None, infile_path=None, outfile_path=None
+        traj_root=None, mongo_root=None, 
+        infile_path='/home/kaidong/Downloads/from-sejong/result-0220/pythonProject-e0100', 
+        outfile_path=None
        )
 
 components = dict(image_preprocessor=Features2TaskTensors,

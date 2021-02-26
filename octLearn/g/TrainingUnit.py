@@ -49,11 +49,19 @@ class TrainingUnit:
                 self._consumer.eval()
             yield loss
 
+    def forward(self, data_input):
+        with torch.no_grad():
+            self._consumer.eval()
+            tensorIn = data_input.to(self._device)
+            tensorOut = self._consumer(tensorIn)
+            self._consumer.train()
+        return tensorOut
+
     def score(self):
-        for tensorIn, tensorOut in self._data_iter:
-            with torch.no_grad():
-                self._consumer.eval()
-                tensorIn = tensorIn.to(self._device)
-                tensorOut = tensorOut.to(self._device)
-                loss = self._consumer.compute_loss(tensorIn, tensorOut)
-                return loss
+        tensorIn, tensorOut = iter(self._data_iter).__next__()
+        with torch.no_grad():
+            self._consumer.eval()
+            tensorIn = tensorIn.to(self._device)
+            tensorOut = tensorOut.to(self._device)
+            loss = self._consumer.compute_loss(tensorIn, tensorOut)
+        return loss

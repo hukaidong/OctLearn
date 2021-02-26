@@ -1,7 +1,7 @@
 import setuptools
 
 setuptools.setup(
-    name='OctLearn',
+    name='octLearn',
     version='1',
     packages=['octLearn'],
     url='',

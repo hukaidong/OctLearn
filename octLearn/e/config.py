@@ -6,16 +6,17 @@ import octLearn
 def reset():
     config_dir = get_config_dir()
     config_file = os.path.join(config_dir, 'default.ini')
-
-    os.truncate(config_file, 0)
+    if os.path.exists(config_file):
+        os.unlink(config_file)
 
 def get_config_dir():
     working_dir = os.path.abspath(os.path.curdir)
-    project_dir = os.path.dirname(os.path.abspath(octLearn.__file__))
+    project_dir = os.path.dirname(os.path.dirname(
+            os.path.abspath(octLearn.__file__)))
 
     if working_dir.startswith(project_dir) or os.path.basename(working_dir) == 'bin':
         target_path = os.path.expanduser(os.path.join('~', '.log'))
-        os.makedirs(target_path, 0x755, exist_ok=True)
+        os.makedirs(target_path, exist_ok=True)
         return target_path
     else:
         return working_dir
