@@ -1,6 +1,8 @@
+import os.path
 import torch
 from torch.utils.data.dataloader import DataLoader
 
+from octLearn.e.config import get_config
 from octLearn.h.autoencoder import Autoencoder
 from octLearn.h.decipher import Decipher
 from octLearn.h.activate_learn import QueryNetwork
@@ -153,24 +155,28 @@ class TrainingHost:
         self.requester = QueryUnit(self._query_network)
 
     def load(self, load_mask=None, _format="%s.torchfile"):
+        infile_path = get_config()['misc']['infile_path'] 
+        infile_format = os.path.join(infile_path, _format)
         load_mask = load_mask or [1, 1, 1]
 
         if load_mask[0]:
-            self._img_encoder.load_state_dict(torch.load(_format % "img-encoder"))
+            self._img_encoder.load_state_dict(torch.load(infile_format % "img-encoder"))
         if load_mask[1]:
-            self._img_decoder.load_state_dict(torch.load(_format % "img-decoder"))
+            self._img_decoder.load_state_dict(torch.load(infile_format % "img-decoder"))
         if load_mask[2]:
-            self._parm_decipher.load_state_dict(torch.load(_format % "parm-decipher"))
+            self._parm_decipher.load_state_dict(torch.load(infile_format % "parm-decipher"))
 
     def dump(self, _format="%s.torchfile", dump_mask=None):
+        outfile_path = get_config()['misc']['outfile_path'] 
+        outfile_format = os.path.join(outfile_path, _format)
         dump_mask = dump_mask or [1, 1, 1]
 
         if dump_mask[0]:
-            torch.save(self._img_encoder.state_dict(), _format % "img-encoder")
+            torch.save(self._img_encoder.state_dict(), outfile_format % "img-encoder")
         if dump_mask[1]:
-            torch.save(self._img_decoder.state_dict(), _format % "img-decoder")
+            torch.save(self._img_decoder.state_dict(), outfile_format % "img-decoder")
         if dump_mask[2]:
-            torch.save(self._parm_decipher.state_dict(), _format % "parm-decipher")
+            torch.save(self._parm_decipher.state_dict(), outfile_format % "parm-decipher")
 
     def refresh_dataset(self, dataset=None):
         # Use for feeding extra dataset for cross-validation or test

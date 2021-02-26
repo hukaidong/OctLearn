@@ -12,6 +12,7 @@ from octLearn.n.radiencoder import RateDistortionAutoencoder
 from octLearn.c.mongo_instance import MongoInstance
 from octLearn.c.mongo_offline import MongoOffline
 from octLearn.e.config import update_config
+from octLearn.e.config import reset as reset_config
 from octLearn.f.torch_dataset import HopDataset
 from octLearn.g.TrainingHost import TrainingHost
 from octLearn.h.decoder import Decoder
@@ -29,12 +30,12 @@ EPOCH_MAX = 50
 CUDA = "cuda:0"
 CPU = "cpu"
 
-configs = dict(device=CUDA, latent_size=400, num_workers=8, step_per_epoch=1000, load_pretrained=False,
-               batch_size=125, database='easy', collection='completed',
-               load_pretrained_mask=(1, 1, 1),
-               mongo_adapter=MongoInstance,  # [ MongoInstance, MongoOffline ]
-               )
-config_disabled = dict(model_path=None, collate_fn=None, load_pretrained_mask=(1, 1, 0))
+reset_config()
+configs = dict(device=CUDA, latent_size=400, num_workers=8, step_per_epoch=1000, 
+        batch_size=125, database='easy', collection='completed', load_pretrained_mask=(1, 1, 1), 
+        mongo_adapter=MongoInstance, feat_root='/media/kaidong/Shared/easy/feature',
+        traj_root=None, mongo_root=None, infile_path=None, outfile_path=None
+       )
 
 components = dict(image_preprocessor=Features2TaskTensors,
                   param_preprocessor=Features2ParamTensors,
@@ -61,9 +62,7 @@ def main():
     dataset = HopDataset(db.Case_Ids())
     trainer = TrainingHost(configs)
     trainer.build_network(dataset, **components)
-    if configs['load_pretrained']:
-        print("loading pretrained networks.")
-        trainer.load(load_mask=configs.get('load_pretrained_mask', None), _format="%s.torchfile")
+    trainer.load(load_mask=configs.get('load_pretrained_mask', None), _format="%s.torchfile")
 
     writer = SummaryWriter()
     print("Training begin.")

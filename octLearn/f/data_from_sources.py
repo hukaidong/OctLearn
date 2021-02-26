@@ -2,6 +2,7 @@ import os
 from os import environ as ENV
 
 import numpy as np
+from octLearn.e.config import get_config
 
 
 def prepare_trajectories(filename):
@@ -53,8 +54,9 @@ class RawData:
         self.objectId = str(document['_id'])
 
     def get_trajectory_and_forwards(self):
-        TRAJECTORY_ROOT = ENV['TrajRoot']
-        filename = os.path.join(TRAJECTORY_ROOT, str(self.objectId)[-2:], str(self.objectId))
+        configs = get_config()
+        traj_root = configs['misc']['traj_root']
+        filename = os.path.join(traj_root, str(self.objectId)[-2:], str(self.objectId))
         result = prepare_trajectories(filename)
         self.trajectories = result['trajectories']
         self.forwards = result['forwards']

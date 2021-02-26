@@ -3,6 +3,11 @@ import os
 
 import octLearn
 
+def reset():
+    config_dir = get_config_dir()
+    config_file = os.path.join(config_dir, 'default.ini')
+
+    os.truncate(config_file, 0)
 
 def get_config_dir():
     working_dir = os.path.abspath(os.path.curdir)

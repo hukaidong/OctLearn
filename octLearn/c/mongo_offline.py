@@ -6,7 +6,8 @@ from os.path import join as pJoin
 
 class MongoOffline:
     def __init__(self, database, collection, dump_instance=None):
-        root = ENV['MongoRoot']
+        configs = get_config()
+        mongo_root = configs['misc']['mongo_root']
         filenames = {
             'case_ids': database + '_' + collection + '_case_ids.pkl',
         }

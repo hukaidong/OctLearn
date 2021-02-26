@@ -1,7 +1,7 @@
 import os
 import zipfile
 from functools import lru_cache
-from os import environ as ENV, path
+from os import path
 
 import numpy
 
@@ -14,7 +14,8 @@ from octLearn.f.data_rasterized import RasterizeData
 
 @lru_cache(maxsize=None)
 def ObjectId2Feature(objectId: str, db=None):
-    FeatRoot = ENV['FeatRoot']
+    configs = get_config()
+    FeatRoot = configs['misc']['feat_root']
     objTail = objectId[-2:]
     dirTarget = path.join(FeatRoot, objTail)
     fileTarget = path.join(dirTarget, objectId + '.npz')
@@ -28,7 +29,6 @@ def ObjectId2Feature(objectId: str, db=None):
 
     if target is None:
         if db is None:
-            configs = get_config()
             if configs['misc']['mongo_adapter'] == 'MongoInstance':
                 MongoRecord = MongoInstance
             else:
@@ -42,7 +42,8 @@ def ObjectId2Feature(objectId: str, db=None):
 
 def extract_feature(document, save_result=True):
     assert document is not None
-    FeatRoot = ENV['FeatRoot']
+    configs = get_config()
+    FeatRoot = configs['misc']['feat_root']
     rasterized = RasterizeData(document)
 
     objId = str(document['_id'])
