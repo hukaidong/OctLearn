@@ -4,13 +4,16 @@ from torch.utils.data.dataset import IterableDataset
 from octLearn.f.feature_cache import ObjectId2Feature
 
 
-def distributeIds(data, num_workers, index):
-    it = iter(data)
+def distributeIds(data, num_workers, worker_index, data_limit=0):
+    it = enumerate(iter(data))
     try:
-        for i in range(index):
+        for i in range(worker_index):
             next(it)
         while True:
-            yield next(it)
+            data_index, data = next(it)
+            if data_limit > 0 and data_index > data_limit:
+                return
+            yield data
             for i in range(num_workers - 1):
                 next(it)
     except StopIteration:
@@ -37,22 +40,29 @@ class HopDataset(IterableDataset):
         return next(ObjectId2Tensors(self.case_list[0]))
 
     def __len__(self):
-        return len(self.case_list * 50)  # 50 trajectories per scenario
+        bucket = len(self.case_list)*50
+        if self.data_limit > 0:
+            return min(self.data_limit, bucket)
+        return bucket
+
 
     def __init__(self, case_list, from_database=None):
         super(HopDataset).__init__()
         self.case_list = case_list
         self.db = from_database
+        self.data_limit = 0
 
     def __iter__(self):
         worker_info = torch.utils.data.get_worker_info()
         if worker_info is None:
-            for objId in self.case_list:
+            for idx, objId in enumerate(self.case_list):
+                if idx > self.data_limit:
+                    return
                 yield from ObjectId2Tensors(objId, db=self.db)
         else:
             num_workers = worker_info.num_workers
             worker_id = worker_info.id
 
-            for objId in distributeIds(self.case_list, num_workers, worker_id):
+            for objId in distributeIds(self.case_list, num_workers, worker_id, self.data_limit):
                 yield from ObjectId2Tensors(objId)
 

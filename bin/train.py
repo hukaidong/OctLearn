@@ -33,10 +33,12 @@ CPU = "cpu"
 reset_config()
 configs = dict(device=CUDA, latent_size=400, num_workers=8, step_per_epoch=1000, 
         batch_size=125, database='easy', collection='completed', load_pretrained_mask=(1, 1, 1), 
-        mongo_adapter=MongoInstance, feat_root='/media/kaidong/Shared/easy/feature',
-        traj_root=None, mongo_root=None, 
-        infile_path='/home/kaidong/Downloads/from-sejong/result-0220/pythonProject-e0100', 
-        outfile_path=None
+        mongo_adapter=MongoInstance, 
+        feat_root='/home/kaidong/easy/feature',
+        traj_root='/home/kaidong/easy/trajectory',
+        mongo_root=None, 
+        infile_path='/home/kaidong/python/bin', 
+        outfile_path='./extremelessdata'
        )
 
 components = dict(image_preprocessor=Features2TaskTensors,
@@ -64,40 +66,44 @@ def main():
     dataset = HopDataset(db.Case_Ids())
     trainer = TrainingHost(configs)
     trainer.build_network(dataset, **components)
-    trainer.load(load_mask=configs.get('load_pretrained_mask', None), _format="%s.torchfile")
+    # trainer.load(load_mask=configs.get('load_pretrained_mask', None), _format="%s.torchfile")
 
     writer = SummaryWriter()
     print("Training begin.")
 
-    print(trainer.autoencoder.score())
-    print(trainer.decipher.score())
-    # autoencoder_train(trainer, writer)
-    # trainer.dump(dump_mask=configs.get('dump_mask', None))
+    autoencoder_train(trainer, writer, dataset)
+    trainer.dump(dump_mask=configs.get('dump_mask', None))
 
     # decipher_train(trainer, writer)
     # trainer.dump(dump_mask=configs.get('dump_mask', None))
 
 
-def autoencoder_train(trainer, writer):
+def autoencoder_train(trainer, writer, dataset):
     train_task = trainer.autoencoder.loopTrain(writer)
-    for step in range(EPOCH_MAX):
-        try:
+    try:
+        for step in range(EPOCH_MAX):
+            dataset.data_limit = step
             reward = next(train_task)
             print("Train step {} ends, loss: {}".format(step, float(reward)))
-            if step % 10 == 0:
-                trainer.dump("%s-ez-step{}.torchfile".format(step))
-        except KeyboardInterrupt:
-            continue
+    except KeyboardInterrupt:
+        pass
+    finally:
+        trainer.dump(dump_mask=configs.get('dump_mask', None))
+
 
 
 def decipher_train(trainer, writer):
     train_task = trainer.decipher.loopTrain(writer)
-    for step in range(EPOCH_MAX):
-        try:
+    try:
+        for step in range(EPOCH_MAX):
+            dataset.data_limit = step
             reward = next(train_task)
             print("Train step {} ends, loss: {}".format(step, float(reward)))
-        except KeyboardInterrupt:
-            continue
+    except KeyboardInterrupt:
+        pass
+    finally:
+        trainer.dump(dump_mask=configs.get('dump_mask', None))
+
 
 
 def make_quest(trainer):

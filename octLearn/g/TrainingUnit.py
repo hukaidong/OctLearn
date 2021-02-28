@@ -31,7 +31,7 @@ class TrainingUnit:
             if self._lr_scheduler:
                 self._lr_scheduler.step()
             if summary_writer:
-                self._monitor(summary_writer, epoch_num)
+                self._monitor(summary_writer)
             # self._consumer.eval()
             yield loss
 

@@ -28,6 +28,7 @@ def ObjectId2Feature(objectId: str, db=None):
         pass
 
     if target is None:
+        print(fileTarget, 'Not Found')
         if db is None:
             if configs['misc']['mongo_adapter'] == 'MongoInstance':
                 MongoRecord = MongoInstance

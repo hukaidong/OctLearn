@@ -107,9 +107,13 @@ class TrainingHost:
                 for x in data_loader:
                     yield self._data_param_extractor(x)
 
-        def autoencoderMonitor(summary_writer, step):
+        self.ae_step = 0
+        def autoencoderMonitor(summary_writer):
+            step = self.ae_step
+            self.ae_step += 1
             current_lr = self._autoencoder_lr_sched.get_last_lr()[-1]
             summary_writer.add_scalar("autoencoder/lr", current_lr, step)
+            summary_writer.add_scalar("data_len", len(dataset), step)
             states = self._policy.last_states
             for key in ['d_x_xp', 'log_d_x', 'd_xp_xd', 'log_p_z', 'loss']:
                 summary_writer.add_scalar("autoencoder/%s" % key, states[key].mean(), step)
@@ -123,12 +127,16 @@ class TrainingHost:
                 summary_writer.add_image("autoencoder/pred-%d" % i, img_out, step)
                 summary_writer.add_image("autoencoder/norm-%d" % i, img_norm, step)
 
+        self.de_step = 0
         def decipherMonitor(summary_writer, step):
+            step = self.de_step
+            self.de_step += 1
             if self._decipher_lr_sched:
                 current_lr = self._decipher_lr_sched.get_last_lr()[-1]
                 summary_writer.add_scalar("decipher/lr", current_lr, step)
             states = self._decipher_network.last_states
             summary_writer.add_scalar("decipher/mean_loss", states['mean_loss'], step)
+            summary_writer.add_scalar("data_len", len(dataset), step)
             for i in range(3):
                 img_in = states['img_input'][i]
                 summary_writer.add_image("decipher/map-%d" % i, img_in[[1, ]], step)
