@@ -1,4 +1,6 @@
 import os.path
+import contextlib
+
 import torch
 from torch.utils.data.dataloader import DataLoader
 
@@ -115,7 +117,7 @@ class TrainingHost:
             summary_writer.add_scalar("autoencoder/lr", current_lr, step)
             summary_writer.add_scalar("data_len", len(dataset), step)
             states = self._policy.last_states
-            for key in ['d_x_xp', 'log_d_x', 'd_xp_xd', 'log_p_z', 'loss']:
+            for key in ['d_x_xp', 'log_d_x', 'd_xp_xd', 'log_p_z']:
                 summary_writer.add_scalar("autoencoder/%s" % key, states[key].mean(), step)
             for i in range(3):
                 img_in = states['x'][i]
@@ -186,7 +188,16 @@ class TrainingHost:
         if dump_mask[2]:
             torch.save(self._parm_decipher.state_dict(), outfile_format % "parm-decipher")
 
-    def refresh_dataset(self, dataset=None):
+    @contextlib.contextmanager
+    def extern_dataset(self, new_dataset):
+        try:
+            self._refresh_dataset(new_dataset)
+            yield
+        finally:
+            self._refresh_dataset()
+
+
+    def _refresh_dataset(self, dataset=None):
         # Use for feeding extra dataset for cross-validation or test
         # if refresh_dataset is called with no argument, resume working on training dataset
         if dataset is None:

@@ -6,9 +6,12 @@ from octLearn.e.config import get_config
 
 
 class MongoOffline:
-    def __init__(self, database, collection, dump_instance=None):
+    def __init__(self, database=None, collection=None, dump_instance=None):
         configs = get_config()
         mongo_root = configs['misc']['mongo_root']
+        if None in (database, collection):
+            database = configs['misc']['database']
+            collection = configs['misc']['collection']
         filenames = {
             'case_ids': database + '_' + collection + '_case_ids.pkl',
         }
@@ -36,4 +39,7 @@ class MongoOffline:
 
 if __name__ == "__main__":
     from octLearn.c.mongo_instance import MongoInstance
+    from octLearn.e.config import update_config
+    update_config({'mongo_root': '/home/kaidong/easy/database/'})
     db = MongoOffline("easy", "completed", dump_instance=MongoInstance("easy", "completed"))
+    db = MongoOffline("easy", "cross_valid", dump_instance=MongoInstance("easy", "cross_valid"))

@@ -36,18 +36,43 @@ class TrainingUnit:
             yield loss
 
     def stepTrain(self, alt_training=False):
-        for tensorIn, tensorOut in self._data_iter:
-            if alt_training:
-                self._consumer.train()
-            tensorIn = tensorIn.to(self._device)
-            tensorOut = tensorOut.to(self._device)
-            self._optimizer.zero_grad()
-            loss = self._consumer.compute_loss(tensorIn, tensorOut)
-            loss.backward()
-            self._optimizer.step()
-            if alt_training:
-                self._consumer.eval()
-            yield loss
+        def step_generator():
+            data_iter = self._data_iter  # freeze dataset use
+            yield
+
+            for tensorIn, tensorOut in data_iter:
+                if alt_training:
+                    self._consumer.train()
+                tensorIn = tensorIn.to(self._device)
+                tensorOut = tensorOut.to(self._device)
+                self._optimizer.zero_grad()
+                loss = self._consumer.compute_loss(tensorIn, tensorOut)
+                loss.backward()
+                self._optimizer.step()
+                if alt_training:
+                    self._consumer.eval()
+                yield loss
+        
+        gen = step_generator()
+        next(gen)
+        return gen
+
+    def score(self):
+        def step_generator():
+            data_iter = self._data_iter  # freeze dataset use
+            yield
+
+            for tensorIn, tensorOut in data_iter:
+                with torch.no_grad():
+                    self._consumer.eval()
+                    tensorIn = tensorIn.to(self._device)
+                    tensorOut = tensorOut.to(self._device)
+                    loss = self._consumer.compute_loss(tensorIn, tensorOut)
+                yield loss
+
+        gen = step_generator()
+        next(gen)
+        return gen
 
     def forward(self, data_input):
         with torch.no_grad():
@@ -56,12 +81,3 @@ class TrainingUnit:
             tensorOut = self._consumer(tensorIn)
             self._consumer.train()
         return tensorOut
-
-    def score(self):
-        tensorIn, tensorOut = iter(self._data_iter).__next__()
-        with torch.no_grad():
-            self._consumer.eval()
-            tensorIn = tensorIn.to(self._device)
-            tensorOut = tensorOut.to(self._device)
-            loss = self._consumer.compute_loss(tensorIn, tensorOut)
-        return loss

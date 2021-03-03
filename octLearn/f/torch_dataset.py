@@ -20,6 +20,11 @@ def distributeIds(data, num_workers, worker_index, data_limit=0):
         return
 
 
+def ObjectIdTrajectoryNums(objectId, db=None):
+    feat = ObjectId2Feature(objectId, db)
+    return feat["cubevis"].shape[0]
+
+
 def ObjectId2Tensors(objectId, db=None):
     feat = ObjectId2Feature(objectId, db)
 
@@ -40,7 +45,8 @@ class HopDataset(IterableDataset):
         return next(ObjectId2Tensors(self.case_list[0]))
 
     def __len__(self):
-        bucket = len(self.case_list)*50
+        num_per_id = ObjectIdTrajectoryNums(self.case_list[0])
+        bucket = len(self.case_list)*num_per_id
         if self.data_limit > 0:
             return min(self.data_limit, bucket)
         return bucket
