@@ -21,18 +21,15 @@ from octLearn.h.encoder import Encoder
 
 from octLearn.utils import RandSeeding, WeightInitializer
 
-# ENV['FeatRoot'] = '/path/to/features'
-# ENV['TrajRoot'] = '/path/to/trajectories'
-# ENV['MongoRoot'] = '/path/to/MongoDB/dumps'
-
-
-EPOCH_MAX = 50
+EPOCH_MAX = 200
+num_train_data = -1  # amount of scenarios
+num_test_data = -1  # amount of scenarios
 
 CUDA = "cuda:0"
 CPU = "cpu"
 
 reset_config()
-configs = dict(device=CUDA, latent_size=400, num_workers=8, step_per_epoch=1000,  batch_size=125, 
+configs = dict(device=CUDA, latent_size=400, num_workers=8, step_per_epoch=1000, batch_size=125, 
         database='easy', 
         collection='completed', 
         load_pretrained_mask=(1, 1, 1), 
@@ -59,14 +56,11 @@ components = dict(image_preprocessor=Features2TaskTensors,
                   # decipher_lr_scheduler=(StepLR, dict(step_size=1, gamma=0.99))
                   )
 
-num_train_data = -1
-num_test_data = -1
 
 
 def main():
     global num_train_data
     update_config(configs)
-
     RandSeeding()
 
     db = configs['mongo_adapter']()
@@ -93,7 +87,10 @@ def autoencoder_train(trainer, writer, dataset):
             train_loss = next(train_task)
             test_loss = next(test_task)
             print("Train step {} ends, loss: {}, {}".format(step, float(train_loss), float(test_loss)))
-            writer.add_scalars("autoencoder/loss", {'train': train_loss, 'test': test_loss}, trainer.ae_step)
+            writer.add_scalars(
+                    "autoencoder/loss", 
+                    {'train': train_loss, 'test': test_loss}, 
+                    trainer.ae_step)
     except KeyboardInterrupt:
         pass
     finally:
