@@ -20,11 +20,14 @@ class TrainingUnit:
     def set_data_iter(self, data_iter):
         self._data_iter = data_iter
 
+    def get_data_iter(self, data_iter):
+        return self._data_iter
+
     def loopTrain(self, summary_writer=None):
         loss = 0
         stepTrain = self.stepTrain()
         for epoch_num in rangeForever():
-            # self._consumer.train()
+            self._consumer.train()
             for i in range(self._step_max()):
                 loss = next(stepTrain)
 
@@ -32,7 +35,6 @@ class TrainingUnit:
                 self._lr_scheduler.step()
             if summary_writer:
                 self._monitor(summary_writer)
-            # self._consumer.eval()
             yield loss
 
     def stepTrain(self, alt_training=False):
@@ -41,33 +43,30 @@ class TrainingUnit:
             yield
 
             for tensorIn, tensorOut in data_iter:
-                if alt_training:
-                    self._consumer.train()
                 tensorIn = tensorIn.to(self._device)
                 tensorOut = tensorOut.to(self._device)
                 self._optimizer.zero_grad()
                 loss = self._consumer.compute_loss(tensorIn, tensorOut)
                 loss.backward()
                 self._optimizer.step()
-                if alt_training:
-                    self._consumer.eval()
                 yield loss
         
         gen = step_generator()
         next(gen)
         return gen
 
-    def score(self):
+    def score(self, summary_writer=None):
         def step_generator():
             data_iter = self._data_iter  # freeze dataset use
             yield
 
             for tensorIn, tensorOut in data_iter:
                 with torch.no_grad():
-                    self._consumer.eval()
                     tensorIn = tensorIn.to(self._device)
                     tensorOut = tensorOut.to(self._device)
                     loss = self._consumer.compute_loss(tensorIn, tensorOut)
+                if summary_writer:
+                    self._monitor(summary_writer, test=True)
                 yield loss
 
         gen = step_generator()
@@ -76,8 +75,6 @@ class TrainingUnit:
 
     def forward(self, data_input):
         with torch.no_grad():
-            self._consumer.eval()
             tensorIn = data_input.to(self._device)
             tensorOut = self._consumer(tensorIn)
-            self._consumer.train()
         return tensorOut

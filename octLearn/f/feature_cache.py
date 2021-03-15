@@ -61,3 +61,26 @@ def extract_feature(document, save_result=True):
         numpy.savez_compressed(fileTarget, **feature)
 
     return feature
+
+
+if __name__ == '__main__':
+    from octLearn.e.config import update_config
+    update_config({
+        'feat_root': "/home/kaidong/normal/feature/", 
+        'traj_root': '/home/kaidong/normal/trajectory/',
+        'mongo_adapter': MongoInstance,
+        })
+
+    db_c = MongoInstance('normal', 'cross_valid')
+    db_t = MongoInstance('normal', 'completed')
+
+    num_processed = 0
+    for caseid in db_c.Case_Ids():
+        ObjectId2Feature(caseid, db_c)
+        num_processed += 1
+        print('processed item {}, case "completed" "{}" '.format(num_processed, caseid), end='\r')
+
+    for caseid in db_t.Case_Ids():
+        ObjectId2Feature(caseid, db_t)
+        num_processed += 1
+        print('processed item {}, case "cross_valid" "{}" '.format(num_processed, caseid), end='\r')

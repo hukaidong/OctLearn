@@ -25,18 +25,21 @@ EPOCH_MAX = 200
 num_train_data = -1  # amount of scenarios
 num_test_data = -1  # amount of scenarios
 
+train_data_inc = 500  # 10 scenarios * 50 trajectories
+
+
 CUDA = "cuda:0"
 CPU = "cpu"
 
 reset_config()
 configs = dict(device=CUDA, latent_size=400, num_workers=8, step_per_epoch=1000, batch_size=125, 
-        database='easy', 
+        database='normal', 
         collection='completed', 
         load_pretrained_mask=(1, 1, 1), 
-        mongo_adapter=MongoOffline, 
-        feat_root='/home/kaidong/easy/feature',
-        traj_root='/home/kaidong/easy/trajectory',
-        mongo_root='/home/kaidong/easy/database', 
+        mongo_adapter=MongoInstance,  # MongoOffline, 
+        feat_root='/home/kaidong/normal/feature',
+        traj_root='/home/kaidong/normal/trajectory',
+        mongo_root='/home/kaidong/normal/database', 
         infile_path=None,
         outfile_path='.'
        )
@@ -74,16 +77,17 @@ def main():
 
 def autoencoder_train(trainer, writer, dataset):
     global num_test_data
-    data = configs['mongo_adapter']('easy', 'cross_valid')
+    data = configs['mongo_adapter']('normal', 'cross_valid')
     dataset = HopDataset(data.Case_Ids()[:num_test_data])
 
     train_task = trainer.autoencoder.loopTrain(writer)
 
     with trainer.extern_dataset(dataset):
-        test_task = trainer.autoencoder.score()
+        test_task = trainer.autoencoder.score(writer)
 
     try:
         for step in range(EPOCH_MAX):
+            dataset.data_limit = (step + 1) * train_data_inc
             train_loss = next(train_task)
             test_loss = next(test_task)
             print("Train step {} ends, loss: {}, {}".format(step, float(train_loss), float(test_loss)))

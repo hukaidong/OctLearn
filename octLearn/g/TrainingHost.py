@@ -110,29 +110,36 @@ class TrainingHost:
                     yield self._data_param_extractor(x)
 
         self.ae_step = 0
-        def autoencoderMonitor(summary_writer):
-            step = self.ae_step
-            self.ae_step += 1
+        def autoencoderMonitor(summary_writer, test=False):
+            if not test:
+                prefix = "autoencoder"
+                step = self.ae_step
+                self.ae_step += 1
+            else:
+                step = self.ae_step
+                prefix = "autoencoder-test"
+
             current_lr = self._autoencoder_lr_sched.get_last_lr()[-1]
-            summary_writer.add_scalar("autoencoder/lr", current_lr, step)
             summary_writer.add_scalar("data_len", len(dataset), step)
+            summary_writer.add_scalar(prefix+"/lr", current_lr, step)
             states = self._policy.last_states
             for key in ['d_x_xp', 'log_d_x', 'd_xp_xd', 'log_p_z']:
-                summary_writer.add_scalar("autoencoder/%s" % key, states[key].mean(), step)
+                summary_writer.add_scalar(prefix+"/%s" % key, states[key].mean(), step)
             for i in range(3):
                 img_in = states['x'][i]
                 img_out = states['xpred'][i]
                 imin = torch.min(img_out)
                 imax = torch.max(img_out)
                 img_norm = (img_out - imin) / (imax - imin)
-                summary_writer.add_image("autoencoder/truth-%d" % i, img_in, step)
-                summary_writer.add_image("autoencoder/pred-%d" % i, img_out, step)
-                summary_writer.add_image("autoencoder/norm-%d" % i, img_norm, step)
+                summary_writer.add_image(prefix+"/truth-%d" % i, img_in, step)
+                summary_writer.add_image(prefix+"/pred-%d" % i, img_out, step)
+                summary_writer.add_image(prefix+"/norm-%d" % i, img_norm, step)
 
         self.de_step = 0
-        def decipherMonitor(summary_writer, step):
-            step = self.de_step
-            self.de_step += 1
+        def decipherMonitor(summary_writer, test=False):
+            if not test:
+                step = self.de_step
+                self.de_step += 1
             if self._decipher_lr_sched:
                 current_lr = self._decipher_lr_sched.get_last_lr()[-1]
                 summary_writer.add_scalar("decipher/lr", current_lr, step)
@@ -197,7 +204,7 @@ class TrainingHost:
             self._refresh_dataset()
 
 
-    def _refresh_dataset(self, dataset=None):
+    def _refresh_dataset(self, dataset=None, *, batch_size=2048):
         # Use for feeding extra dataset for cross-validation or test
         # if refresh_dataset is called with no argument, resume working on training dataset
         if dataset is None:
@@ -206,14 +213,14 @@ class TrainingHost:
             return
 
         def autoencoderDataIter():
-            data_loader = DataLoader(dataset, batch_size=self.config['batch_size'], num_workers=0,
+            data_loader = DataLoader(dataset, batch_size=batch_size, num_workers=2,
                                      collate_fn=self.config.get('collate_fn', None), pin_memory=True)
             while True:
                 for x in data_loader:
                     yield self._data_image_extractor(x)
 
         def decipherDataIter():
-            data_loader = DataLoader(dataset, batch_size=self.config['batch_size'], num_workers=0,
+            data_loader = DataLoader(dataset, batch_size=batch_size, num_workers=2,
                                      collate_fn=self.config.get('collate_fn', None), pin_memory=True)
             while True:
                 for x in data_loader:
