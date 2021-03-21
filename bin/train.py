@@ -67,27 +67,27 @@ def main():
     RandSeeding()
 
     db = configs['mongo_adapter']()
-    dataset = HopDataset(db.Case_Ids()[:num_train_data])
+    train_dataset = HopDataset(db.Case_Ids()[:num_train_data])
     trainer = TrainingHost(configs)
-    trainer.build_network(dataset, **components)
+    trainer.build_network(train_dataset, **components)
 
     writer = SummaryWriter()
-    autoencoder_train(trainer, writer, dataset)
+    autoencoder_train(trainer, writer, train_dataset)
 
 
-def autoencoder_train(trainer, writer, dataset):
+def autoencoder_train(trainer, writer, train_dataset):
     global num_test_data
     data = configs['mongo_adapter']('normal', 'cross_valid')
-    dataset = HopDataset(data.Case_Ids()[:num_test_data])
+    test_dataset = HopDataset(data.Case_Ids()[:num_test_data])
 
     train_task = trainer.autoencoder.loopTrain(writer)
 
-    with trainer.extern_dataset(dataset):
+    with trainer.extern_dataset(test_dataset):
         test_task = trainer.autoencoder.score(writer)
 
     try:
         for step in range(EPOCH_MAX):
-            dataset.data_limit = (step + 1) * train_data_inc
+            train_dataset.data_limit = (step + 1) * train_data_inc
             train_loss = next(train_task)
             test_loss = next(test_task)
             print("Train step {} ends, loss: {}, {}".format(step, float(train_loss), float(test_loss)))
