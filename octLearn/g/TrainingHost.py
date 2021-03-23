@@ -140,6 +140,10 @@ class TrainingHost:
             if not test:
                 step = self.de_step
                 self.de_step += 1
+            else:
+                step = self.ae_step
+                prefix = "decipher-test"
+
             if self._decipher_lr_sched:
                 current_lr = self._decipher_lr_sched.get_last_lr()[-1]
                 summary_writer.add_scalar("decipher/lr", current_lr, step)

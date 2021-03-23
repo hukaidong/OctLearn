@@ -7,6 +7,8 @@ def reset():
     config_dir = get_config_dir()
     config_file = os.path.join(config_dir, 'default.ini')
     if os.path.exists(config_file):
+        print("[Warning] The configuration exists before training, please make sure not having" +
+               "multiple instances running in same directory.")
         os.unlink(config_file)
 
 def get_config_dir():

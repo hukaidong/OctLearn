@@ -21,26 +21,24 @@ from octLearn.h.encoder import Encoder
 
 from octLearn.utils import RandSeeding, WeightInitializer
 
-EPOCH_MAX = 200
 num_train_data = -1  # amount of scenarios
 num_test_data = -1  # amount of scenarios
 
-train_data_inc = 500  # 10 scenarios * 50 trajectories
-
+#train_data_inc = 500  # 10 scenarios * 50 trajectories
 
 CUDA = "cuda:0"
 CPU = "cpu"
 
 reset_config()
-configs = dict(device=CUDA, latent_size=400, num_workers=8, step_per_epoch=1000, batch_size=125, 
+configs = dict(device=CUDA, latent_size=400, num_workers=8, step_per_epoch=300, batch_size=125, 
         database='normal', 
         collection='completed', 
-        load_pretrained_mask=(1, 1, 1), 
+        load_pretrained_mask=(1, 1, 0), 
         mongo_adapter=MongoInstance,  # MongoOffline, 
         feat_root='/home/kaidong/normal/feature',
         traj_root='/home/kaidong/normal/trajectory',
         mongo_root='/home/kaidong/normal/database', 
-        infile_path=None,
+        infile_path='/home/kaidong/sej21/p2_1',
         outfile_path='.'
        )
 
@@ -55,7 +53,7 @@ components = dict(image_preprocessor=Features2TaskTensors,
                   autoencoder_optimizer=(SGD, dict(lr=0.01, weight_decay=0.002)),
                   autoencoder_lr_scheduler=(ExponentialLR, dict(gamma=0.95)),
                   # autoencoder_lr_scheduler=(CyclicLR, dict(base_lr=0.01, max_lr=0.1, step_size_up=EPOCH_MAX // 4)),
-                  decipher_optimizer=(SGD, dict(lr=0.01, weight_decay=1e-5)),
+                  decipher_optimizer=(SGD, dict(lr=1e-3, weight_decay=1e-5)),
                   # decipher_lr_scheduler=(StepLR, dict(step_size=1, gamma=0.99))
                   )
 
@@ -71,8 +69,14 @@ def main():
     trainer = TrainingHost(configs)
     trainer.build_network(train_dataset, **components)
 
+    #  writer = SummaryWriter()
+    #  autoencoder_train(trainer, writer, train_dataset)
+
+    trainer.load(load_mask=configs.get('load_pretrained_mask', None))
+    print('Verify autoencoder training loss: ', float(next(trainer.autoencoder.score())))
     writer = SummaryWriter()
-    autoencoder_train(trainer, writer, train_dataset)
+    decipher_train(trainer, writer)
+
 
 
 def autoencoder_train(trainer, writer, train_dataset):
@@ -85,16 +89,40 @@ def autoencoder_train(trainer, writer, train_dataset):
     with trainer.extern_dataset(test_dataset):
         test_task = trainer.autoencoder.score(writer)
 
+    max_epoch = 600
+
     try:
-        for step in range(EPOCH_MAX):
-            train_dataset.data_limit = (step + 1) * train_data_inc
+        for step in range(max_epoch):
+            #train_dataset.data_limit = (step + 1) * train_data_inc
             train_loss = next(train_task)
             test_loss = next(test_task)
             print("Train step {} ends, loss: {}, {}".format(step, float(train_loss), float(test_loss)))
-            writer.add_scalars(
-                    "autoencoder/loss", 
-                    {'train': train_loss, 'test': test_loss}, 
-                    trainer.ae_step)
+            writer.add_scalars("autoencoder/loss",  {'train': train_loss, 'test': test_loss}, trainer.ae_step)
+    except KeyboardInterrupt:
+        pass
+    finally:
+        trainer.dump(dump_mask=configs.get('dump_mask', None))
+
+
+def decipher_train(trainer, writer, train_dataset=None):
+    global num_test_data
+    data = configs['mongo_adapter']('normal', 'cross_valid')
+    test_dataset = HopDataset(data.Case_Ids()[:num_test_data])
+
+    train_task = trainer.decipher.loopTrain(writer)
+
+    with trainer.extern_dataset(test_dataset):
+        test_task = trainer.decipher.score(writer)
+
+    max_epoch = 2000
+
+    try:
+        for step in range(max_epoch):
+            #train_dataset.data_limit = (step + 1) * train_data_inc
+            train_loss = next(train_task)
+            test_loss = next(test_task)
+            print("Train step {} ends, loss: {}, {}".format(step, float(train_loss), float(test_loss)))
+            writer.add_scalars("decipher/loss",  {'train': train_loss, 'test': test_loss},  trainer.de_step)
     except KeyboardInterrupt:
         pass
     finally:
