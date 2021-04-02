@@ -4,6 +4,10 @@ import numpy as np
 import torch
 
 
+class NoDataError(RuntimeError):
+    pass
+
+
 class RectangleRepTBLR(namedtuple('RectangleRep', ['top', 'bottom', 'left', 'right'])):
     pass
 
@@ -29,6 +33,7 @@ def WeightInitializer(m):
     if classname.find('BatchNorm2d') != -1:
         torch.nn.init.normal_(m.weight.data, 1.0)
         torch.nn.init.constant_(m.bias.data, 0.0)
+
 
 def DataLoaderCollate(batch):
     return tuple(zip(*batch))

@@ -10,6 +10,7 @@ from octLearn.c.mongo_offline import MongoOffline
 from octLearn.e.config import get_config
 from octLearn.f.agent_parameters import NormalizeAgentParameters
 from octLearn.f.data_rasterized import RasterizeData
+from octLearn.utils import NoDataError
 
 
 @lru_cache(maxsize=None)
@@ -37,6 +38,9 @@ def ObjectId2Feature(objectId: str, db=None):
 
             db = MongoRecord()
         doc = db.Case_By_id(objectId)
+        if doc is None:  # BUG: Find this ghost
+            print('Extract from {}: {}'.format(objectId, str(doc)[:100]), flush=True)
+            raise NoDataError
         target = extract_feature(doc)
     return target
 

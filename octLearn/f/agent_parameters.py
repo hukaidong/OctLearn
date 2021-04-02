@@ -20,5 +20,6 @@ def NormalizeAgentParameters(document):
 
 
 def DenormalizeAgentParameters(array):
-    c = GetAgentParamConfigurations
-    return array * c['rng'] + c['avg']
+    c = GetAgentParamConfigurations()
+    pred = array * c['rng'] + c['avg']
+    return numpy.clip(pred, a_min=c['min'], a_max=c['max'])

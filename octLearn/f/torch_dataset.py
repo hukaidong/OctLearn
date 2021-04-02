@@ -2,6 +2,7 @@ import torch
 from torch.utils.data.dataset import IterableDataset
 
 from octLearn.f.feature_cache import ObjectId2Feature
+from octLearn.utils import NoDataError
 
 
 def distributeIds(data, num_workers, worker_index, data_limit=0):
@@ -69,6 +70,11 @@ class HopDataset(IterableDataset):
             num_workers = worker_info.num_workers
             worker_id = worker_info.id
 
-            for objId in distributeIds(self.case_list, num_workers, worker_id, self.data_limit):
-                yield from ObjectId2Tensors(objId)
+            try:
+                for objId in distributeIds(self.case_list, num_workers, worker_id, self.data_limit):
+                    yield from ObjectId2Tensors(objId)
+            except NoDataError:
+                return
 
+    def update_case_list(self, case_list):
+        self.case_list = case_list
