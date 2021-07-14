@@ -7,7 +7,7 @@ def reset():
     config_dir = get_config_dir()
     config_file = os.path.join(config_dir, 'default.ini')
     if os.path.exists(config_file):
-        print("[Warning] The configuration exists before training, please make sure not having" +
+        print("[Warning] The configuration exists before training, please make sure not having " +
                "multiple instances running in same directory.")
         os.unlink(config_file)
 
@@ -47,7 +47,7 @@ def set_config(*, config_obj):
         config_obj.write(file)
 
 
-def update_config(dict_config):
+def update_config(dict_config, *, verbose=True):
     dict_dup = dict()
     for k, v in dict_config.items():
         t = type(v)
@@ -57,7 +57,7 @@ def update_config(dict_config):
             dict_dup[k] = v.__name__
         elif v is None:
             continue
-        else:
+        elif verbose:
             print('[Warning] config value ({}: {}) not being serialized'.format(k, v))
 
     config_obj = get_config()

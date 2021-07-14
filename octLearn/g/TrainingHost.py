@@ -179,13 +179,17 @@ class TrainingHost:
         infile_path = get_config()['misc']['infile_path'] 
         infile_format = os.path.join(infile_path, _format)
         load_mask = load_mask or [1, 1, 1]
+        device = self.config['device']
 
         if load_mask[0]:
-            self._img_encoder.load_state_dict(torch.load(infile_format % "img-encoder"))
+            self._img_encoder.load_state_dict(
+                torch.load(infile_format % "img-encoder", map_location=device))
         if load_mask[1]:
-            self._img_decoder.load_state_dict(torch.load(infile_format % "img-decoder"))
+            self._img_decoder.load_state_dict(
+                torch.load(infile_format % "img-decoder", map_location=device))
         if load_mask[2]:
-            self._parm_decipher.load_state_dict(torch.load(infile_format % "parm-decipher"))
+            self._parm_decipher.load_state_dict(
+                torch.load(infile_format % "parm-decipher", map_location=device))
 
     def dump(self, _format="%s.torchfile", dump_mask=None):
         outfile_path = get_config()['misc']['outfile_path'] 
