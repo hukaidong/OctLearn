@@ -119,9 +119,11 @@ class TrainingHost:
                 step = self.ae_step
                 prefix = "autoencoder-test"
 
-            current_lr = self._autoencoder_lr_sched.get_last_lr()[-1]
+            if self._autoencoder_lr_sched:
+                current_lr = self._autoencoder_lr_sched.get_last_lr()[-1]
+                summary_writer.add_scalar(prefix + "/lr", current_lr, step)
+
             summary_writer.add_scalar("data_len", len(dataset), step)
-            summary_writer.add_scalar(prefix+"/lr", current_lr, step)
             states = self._policy.last_states
             for key in ['d_x_xp', 'log_d_x', 'd_xp_xd', 'log_p_z']:
                 summary_writer.add_scalar(prefix+"/%s" % key, states[key].mean(), step)
@@ -147,6 +149,7 @@ class TrainingHost:
             if self._decipher_lr_sched:
                 current_lr = self._decipher_lr_sched.get_last_lr()[-1]
                 summary_writer.add_scalar("decipher/lr", current_lr, step)
+
             states = self._decipher_network.last_states
             summary_writer.add_scalar("decipher/mean_loss", states['mean_loss'], step)
             summary_writer.add_scalar("data_len", len(dataset), step)
