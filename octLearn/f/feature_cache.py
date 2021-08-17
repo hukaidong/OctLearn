@@ -14,7 +14,7 @@ from octLearn.utils import NoDataError
 
 
 @lru_cache(maxsize=None)
-def ObjectId2Feature(objectId: str, db=None):
+def ObjectId2Feature(objectId: str, db_gen=None):
     configs = get_config()
     FeatRoot = configs['misc']['feat_root']
     objTail = objectId[-2:]
@@ -30,13 +30,15 @@ def ObjectId2Feature(objectId: str, db=None):
 
     if target is None:
         print(fileTarget, 'Not Found')
-        if db is None:
+        if db_gen is None:
             if configs['misc']['mongo_adapter'] == 'MongoInstance':
                 MongoRecord = MongoInstance
             else:
                 MongoRecord = MongoOffline
-
             db = MongoRecord()
+        else:
+            db = db_gen()
+
         doc = db.Case_By_id(objectId)
         if doc is None:  # BUG: Find this ghost
             print('Extract from {}: {}'.format(objectId, str(doc)[:100]), flush=True)
