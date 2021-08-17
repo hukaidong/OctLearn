@@ -24,18 +24,24 @@ class TrainingUnit:
         return self._data_iter
 
     def loopTrain(self, summary_writer=None):
-        loss = 0
-        stepTrain = self.stepTrain()
-        for epoch_num in rangeForever():
-            self._consumer.train()
-            for i in range(self._step_max()):
-                loss = next(stepTrain)
+        def loop_generator():
+            stepTrain = self.stepTrain()
+            yield
+            loss = 0
+            for epoch_num in rangeForever():
+                self._consumer.train()
+                for i in range(self._step_max()):
+                    loss = next(stepTrain)
 
-            if self._lr_scheduler:
-                self._lr_scheduler.step()
-            if summary_writer:
-                self._monitor(summary_writer)
-            yield loss
+                if self._lr_scheduler:
+                    self._lr_scheduler.step()
+                if summary_writer:
+                    self._monitor(summary_writer)
+                yield loss
+
+        gen = loop_generator()
+        next(gen)
+        return gen
 
     def stepTrain(self, alt_training=False):
         def step_generator():
