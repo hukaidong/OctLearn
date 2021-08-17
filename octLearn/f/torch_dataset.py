@@ -72,7 +72,7 @@ class HopDataset(IterableDataset):
 
             try:
                 for objId in distributeIds(self.case_list, num_workers, worker_id, self.data_limit):
-                    yield from ObjectId2Tensors(objId)
+                    yield from ObjectId2Tensors(objId, db=self.db)
             except NoDataError:
                 return
 
