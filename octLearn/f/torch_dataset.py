@@ -21,13 +21,13 @@ def distributeIds(data, num_workers, worker_index, data_limit=0):
         return
 
 
-def ObjectIdTrajectoryNums(objectId, db=None):
-    feat = ObjectId2Feature(objectId, db)
+def ObjectIdTrajectoryNums(objectId, db_gen=None):
+    feat = ObjectId2Feature(objectId, db_gen)
     return feat["cubevis"].shape[0]
 
 
-def ObjectId2Tensors(objectId, db=None):
-    feat = ObjectId2Feature(objectId, db)
+def ObjectId2Tensors(objectId, db_gen=None):
+    feat = ObjectId2Feature(objectId, db_gen)
 
     raw_map = feat['cubevis']
     raw_tsk = feat['taskvis']
