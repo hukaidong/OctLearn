@@ -110,6 +110,7 @@ class TrainingHost:
                     yield self._data_param_extractor(x)
 
         self.ae_step = 0
+
         def autoencoderMonitor(summary_writer, test=False):
             if not test:
                 prefix = "autoencoder"
@@ -126,18 +127,19 @@ class TrainingHost:
             summary_writer.add_scalar("data_len", len(dataset), step)
             states = self._policy.last_states
             for key in ['d_x_xp', 'log_d_x', 'd_xp_xd', 'log_p_z']:
-                summary_writer.add_scalar(prefix+"/%s" % key, states[key].mean(), step)
+                summary_writer.add_scalar(prefix + "/%s" % key, states[key].mean(), step)
             for i in range(3):
                 img_in = states['x'][i]
                 img_out = states['xpred'][i]
                 imin = torch.min(img_out)
                 imax = torch.max(img_out)
                 img_norm = (img_out - imin) / (imax - imin)
-                summary_writer.add_image(prefix+"/truth-%d" % i, img_in, step)
-                summary_writer.add_image(prefix+"/pred-%d" % i, img_out, step)
-                summary_writer.add_image(prefix+"/norm-%d" % i, img_norm, step)
+                summary_writer.add_image(prefix + "/truth-%d" % i, img_in, step)
+                summary_writer.add_image(prefix + "/pred-%d" % i, img_out, step)
+                summary_writer.add_image(prefix + "/norm-%d" % i, img_norm, step)
 
         self.de_step = 0
+
         def decipherMonitor(summary_writer, test=False):
             if not test:
                 step = self.de_step
@@ -179,7 +181,7 @@ class TrainingHost:
         self.requester = QueryUnit(self._query_network)
 
     def load(self, load_mask=None, _format="%s.torchfile"):
-        infile_path = get_config()['misc']['infile_path'] 
+        infile_path = get_config()['misc']['infile_path']
         infile_format = os.path.join(infile_path, _format)
         load_mask = load_mask or [1, 1, 1]
         device = self.config['device']
@@ -195,7 +197,7 @@ class TrainingHost:
                 torch.load(infile_format % "parm-decipher", map_location=device))
 
     def dump(self, _format="%s.torchfile", dump_mask=None):
-        outfile_path = get_config()['misc']['outfile_path'] 
+        outfile_path = get_config()['misc']['outfile_path']
         outfile_format = os.path.join(outfile_path, _format)
         dump_mask = dump_mask or [1, 1, 1]
 
@@ -207,15 +209,16 @@ class TrainingHost:
             torch.save(self._parm_decipher.state_dict(), outfile_format % "parm-decipher")
 
     @contextlib.contextmanager
-    def extern_dataset(self, new_dataset):
+    def extern_dataset(self, new_dataset, /, batch_size=None):
         try:
-            self._refresh_dataset(new_dataset)
+            self._refresh_dataset(new_dataset, batch_size=batch_size)
             yield
         finally:
             self._refresh_dataset()
 
-
-    def _refresh_dataset(self, dataset=None, *, batch_size=2048):
+    def _refresh_dataset(self, dataset=None, /, batch_size=None):
+        if batch_size is None:
+            batch_size = self.config['batch_size']
         # Use for feeding extra dataset for cross-validation or test
         # if refresh_dataset is called with no argument, resume working on training dataset
         if dataset is None:
@@ -224,14 +227,14 @@ class TrainingHost:
             return
 
         def autoencoderDataIter():
-            data_loader = DataLoader(dataset, batch_size=batch_size, num_workers=2,
+            data_loader = DataLoader(dataset, batch_size=batch_size, num_workers=self.config['num_workers'],
                                      collate_fn=self.config.get('collate_fn', None), pin_memory=True)
             while True:
                 for x in data_loader:
                     yield self._data_image_extractor(x)
 
         def decipherDataIter():
-            data_loader = DataLoader(dataset, batch_size=batch_size, num_workers=2,
+            data_loader = DataLoader(dataset, batch_size=batch_size, num_workers=self.config['num_workers'],
                                      collate_fn=self.config.get('collate_fn', None), pin_memory=True)
             while True:
                 for x in data_loader:
