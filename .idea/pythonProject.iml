@@ -4,8 +4,9 @@
     <content url="file://$MODULE_DIR$">
       <sourceFolder url="file://$MODULE_DIR$" isTestSource="false" />
       <excludeFolder url="file://$MODULE_DIR$/bin/runs" />
+      <excludeFolder url="file://$MODULE_DIR$/octLearn.egg-info" />
     </content>
-    <orderEntry type="jdk" jdkName="Python 3.7 (torch)" jdkType="Python SDK" />
+    <orderEntry type="jdk" jdkName="Python 3.8 (octLearn)" jdkType="Python SDK" />
     <orderEntry type="sourceFolder" forTests="false" />
   </component>
   <component name="PyDocumentationSettings">
