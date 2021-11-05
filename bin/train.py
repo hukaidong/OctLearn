@@ -7,17 +7,17 @@ from torch.optim.lr_scheduler import ExponentialLR
 from torch.utils.tensorboard import SummaryWriter
 from torch.utils.data import DataLoader
 
-from octLearn.m.image_process import Features2TaskTensors, Features2ParamTensors
-from octLearn.n.convnet import FlatToFlatNetwork, FlatToImgNetwork, ImgToFlatNetwork, ImgToImgDisturbNetwork
-from octLearn.n.radiencoder import RateDistortionAutoencoder
-from octLearn.c.mongo_instance import MongoInstance
-from octLearn.c.mongo_offline import MongoOffline
+from octLearn.processing.image_process import Features2TaskTensors, Features2ParamTensors
+from octLearn.network_framework.convnet import FlatToFlatNetwork, FlatToImgNetwork, ImgToFlatNetwork, ImgToImgDisturbNetwork
+from octLearn.network_framework.radiencoder import RateDistortionAutoencoder
+from octLearn.mongo_stuff.mongo_instance import MongoInstance
+from octLearn.mongo_stuff.mongo_offline import MongoOffline
 from octLearn.e.config import update_config
 from octLearn.e.config import reset as reset_config
-from octLearn.f.torch_dataset import HopDataset
-from octLearn.g.TrainingHost import TrainingHost
-from octLearn.h.decoder import Decoder
-from octLearn.h.encoder import Encoder
+from octLearn.dataset_cubes.torch_dataset import HopDataset
+from octLearn.neural_network_unit.TrainingHost import TrainingHost
+from octLearn.polices.decoder import Decoder
+from octLearn.polices.encoder import Encoder
 
 from octLearn.utils import RandSeeding, WeightInitializer
 

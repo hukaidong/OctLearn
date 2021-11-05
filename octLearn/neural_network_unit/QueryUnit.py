@@ -1,5 +1,5 @@
 import torch
-from octLearn.f.agent_parameters import DenormalizeAgentParameters
+from octLearn.dataset_cubes.agent_parameters import DenormalizeAgentParameters
 
 
 class QueryUnit:

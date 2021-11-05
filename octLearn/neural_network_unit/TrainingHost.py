@@ -5,11 +5,11 @@ import torch
 from torch.utils.data.dataloader import DataLoader
 
 from octLearn.e.config import get_config
-from octLearn.h.autoencoder import Autoencoder
-from octLearn.h.decipher import Decipher
-from octLearn.h.activate_learn import QueryNetwork
-from octLearn.g.TrainingUnit import TrainingUnit
-from octLearn.g.QueryUnit import QueryUnit
+from octLearn.polices.autoencoder import Autoencoder
+from octLearn.polices.decipher import Decipher
+from octLearn.polices.activate_learn import QueryNetwork
+from octLearn.neural_network_unit.TrainingUnit import TrainingUnit
+from octLearn.neural_network_unit.QueryUnit import QueryUnit
 
 
 class TrainingHost:

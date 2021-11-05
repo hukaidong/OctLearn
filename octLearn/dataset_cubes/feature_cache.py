@@ -5,11 +5,11 @@ from os import path
 
 import numpy
 
-from octLearn.c.mongo_instance import MongoInstance
-from octLearn.c.mongo_offline import MongoOffline
+from octLearn.mongo_stuff.mongo_instance import MongoInstance
+from octLearn.mongo_stuff.mongo_offline import MongoOffline
 from octLearn.e.config import get_config
-from octLearn.f.agent_parameters import NormalizeAgentParameters
-from octLearn.f.data_rasterized import RasterizeData
+from octLearn.dataset_cubes.agent_parameters import NormalizeAgentParameters
+from octLearn.dataset_cubes.data_rasterized import RasterizeData
 from octLearn.utils import NoDataError
 
 

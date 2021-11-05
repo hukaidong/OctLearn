@@ -3,7 +3,7 @@ import unittest
 from pathlib import Path
 
 from matplotlib import pyplot as plt
-from octLearn.c.TrajectoryEncodes import *
+from octLearn.mongo_stuff.TrajectoryEncodes import *
 
 SAMPLEOBJID = '5fc0b4ae4478ded555ed390b'
 DATA_FOLDER = os.path.join(os.path.dirname(__file__), 'cases')

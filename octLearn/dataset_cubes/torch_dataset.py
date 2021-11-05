@@ -1,7 +1,7 @@
 import torch
 from torch.utils.data.dataset import IterableDataset
 
-from octLearn.f.feature_cache import ObjectId2Feature
+from octLearn.dataset_cubes.feature_cache import ObjectId2Feature
 from octLearn.utils import NoDataError
 
 

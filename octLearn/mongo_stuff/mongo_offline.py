@@ -38,7 +38,7 @@ class MongoOffline:
         raise NotImplementedError()
 
 if __name__ == "__main__":
-    from octLearn.c.mongo_instance import MongoInstance
+    from octLearn.mongo_stuff.mongo_instance import MongoInstance
     from octLearn.e.config import update_config
     update_config({'mongo_root': '/home/kaidong/easy/database/'})
     db = MongoOffline("easy", "completed", dump_instance=MongoInstance("easy", "completed"))

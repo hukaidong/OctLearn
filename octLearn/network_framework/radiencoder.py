@@ -1,7 +1,7 @@
 import torch
 from torch import nn
 
-from octLearn.m.distribution import NormalLogProb
+from octLearn.processing.distribution import NormalLogProb
 
 
 def isnan(tensor):

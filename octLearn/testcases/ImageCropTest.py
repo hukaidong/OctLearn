@@ -5,7 +5,7 @@ from matplotlib import pyplot as plt
 from numpy import random as npr
 from numpy import testing as npt
 
-from octLearn.f.graphic import translate_and_crop
+from octLearn.dataset_cubes.graphic import translate_and_crop
 
 
 def plot_image(img_a, img_b):

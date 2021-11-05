@@ -5,8 +5,8 @@ import unittest
 import numpy as np
 from matplotlib import pyplot as plt
 
-from octLearn.f.data_from_sources import RawData
-from octLearn.f.data_rasterized import RasterizeData
+from octLearn.dataset_cubes.data_from_sources import RawData
+from octLearn.dataset_cubes.data_rasterized import RasterizeData
 
 
 # noinspection PyMissingConstructor
