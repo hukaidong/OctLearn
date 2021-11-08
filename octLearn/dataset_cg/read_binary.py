@@ -34,6 +34,7 @@ env1_rect = {"xmin": -70, "xmax": 70, "ymin": -100, "ymax": 100}
 if __name__ == "__main__":
     import os
     from octLearn.dataset_cg.trajectory_to_image import trajectory_to_image
+    from octLearn.dataset_cg.trajectory_to_image import task_to_image
     from octLearn.dataset_cg.obstacle_to_image import obstacle_to_image_slow
 
     filename = os.environ["trajectory_sample"]
@@ -54,17 +55,26 @@ if __name__ == "__main__":
     """
 
     from matplotlib import pyplot as plt
-    images = np.array([trajectory_to_image(t, env1_rect, 0.2) for t in traj])
-    ax = plt.imshow(images.max(0))
+
+    plt.rcParams['figure.figsize'] = (10, 7)
+    images = np.array([trajectory_to_image(t, env1_rect, 2) for t in traj])
+    images_max = images.max(0)
+    ax = plt.imshow(images_max.T)
+    plt.title(str(images.shape))
+    plt.show()
+
+    images = np.array([task_to_image(t, env1_rect, 2) for t in traj])
+    images_max = np.amax(np.abs(images), axis=(0, 1))
+    ax = plt.imshow(images_max.T)
     plt.title(str(images.shape))
     plt.show()
 
     obs_image = obstacle_to_image_slow(obt, obi, env1_rect, 0.2)
     plt.clf()
-    plt.imshow(obs_image)
+    plt.imshow(obs_image.T)
     plt.show()
 
     plt.clf()
-    plt.imshow(obs_image + images.max(0))
+    plt.imshow(obs_image.T + images_max.T)
     plt.show()
 
