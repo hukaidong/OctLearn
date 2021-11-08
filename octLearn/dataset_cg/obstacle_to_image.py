@@ -40,7 +40,7 @@ def draw_box_in_image(box_param, canvas_rect, resolution, image_out):
             xpos = canvas_rect["xmin"] + resolution * xidx
             ypos = canvas_rect["ymin"] + resolution * yidx
 
-            if xmin <= xpos < xmax and ymin <= ypos < ymax:
+            if xmin <= xpos <= xmax and ymin <= ypos <= ymax:
                 image_out[yidx, xidx] = 1
 
 

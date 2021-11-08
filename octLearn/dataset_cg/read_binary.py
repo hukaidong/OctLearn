@@ -69,7 +69,7 @@ if __name__ == "__main__":
     plt.title(str(images.shape))
     plt.show()
 
-    obs_image = obstacle_to_image_slow(obt, obi, env1_rect, 0.2)
+    obs_image = obstacle_to_image_slow(obt, obi, env1_rect, 2)
     plt.clf()
     plt.imshow(obs_image.T)
     plt.show()
