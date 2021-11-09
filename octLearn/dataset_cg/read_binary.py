@@ -1,7 +1,6 @@
 import numpy as np
 
 
-
 def read_trajectory_binary(filename):
     with open(filename, "rb") as file:
         eof = file.seek(0, 2)
@@ -25,20 +24,32 @@ def read_trajectory_binary(filename):
             trajectory_matrix = np.fromfile(file, np.float32, trajectoryLength).reshape((-1, 2))
             agent_array.append(trajectory_matrix)
 
-
     return (obsType, obsInfo, parameters, agent_array)
 
 
-env1_rect = {"xmin": -60, "xmax": 60, "ymin": -90, "ymax": 90}
 env1_rect = {"xmin": -70, "xmax": 70, "ymin": -100, "ymax": 100}
-if __name__ == "__main__":
-    import os
+
+
+def get_trajectory_feature_from_file(filename, resolution):
     from octLearn.dataset_cg.trajectory_to_image import trajectory_to_image
     from octLearn.dataset_cg.trajectory_to_image import task_to_image
     from octLearn.dataset_cg.obstacle_to_image import obstacle_to_image_slow
 
-    filename = os.environ["trajectory_sample"]
     obt, obi, param, traj = read_trajectory_binary(filename)
+    agt_images = np.array([trajectory_to_image(t, env1_rect, resolution) for t in traj])
+    agt_images = np.expand_dims(agt_images, axis=1)
+    num_agts = agt_images.shape[0]
+    env_images = np.array([task_to_image(t, env1_rect, resolution) for t in traj])
+    obs_image = np.array(obstacle_to_image_slow(obt, obi, env1_rect, resolution))
+    obs_images = np.repeat(np.expand_dims(obs_image, [0, 1]), num_agts, axis=0)
+    feature_tensor = np.concatenate([obs_images, env_images, agt_images], axis=1)
+    return feature_tensor, np.delete(param, range(31, 41))
+
+
+if __name__ == "__main__":
+    import os
+
+    filename = os.environ["trajectory_sample"]
 
     """ # Get min/max index in trajectory
     float_formatter = "{:.2f}".format
@@ -54,27 +65,4 @@ if __name__ == "__main__":
     ))
     """
 
-    from matplotlib import pyplot as plt
-
-    plt.rcParams['figure.figsize'] = (10, 7)
-    images = np.array([trajectory_to_image(t, env1_rect, 2) for t in traj])
-    images_max = images.max(0)
-    ax = plt.imshow(images_max.T)
-    plt.title(str(images.shape))
-    plt.show()
-
-    images = np.array([task_to_image(t, env1_rect, 2) for t in traj])
-    images_max = np.amax(np.abs(images), axis=(0, 1))
-    ax = plt.imshow(images_max.T)
-    plt.title(str(images.shape))
-    plt.show()
-
-    obs_image = obstacle_to_image_slow(obt, obi, env1_rect, 2)
-    plt.clf()
-    plt.imshow(obs_image.T)
-    plt.show()
-
-    plt.clf()
-    plt.imshow(obs_image.T + images_max.T)
-    plt.show()
-
+    get_trajectory_feature_from_file(filename, 1)
