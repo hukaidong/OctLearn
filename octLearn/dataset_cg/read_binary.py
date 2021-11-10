@@ -43,7 +43,7 @@ def get_trajectory_feature_from_file(filename, resolution):
     obs_image = np.array(obstacle_to_image_slow(obt, obi, env1_rect, resolution))
     obs_images = np.repeat(np.expand_dims(obs_image, [0, 1]), num_agts, axis=0)
     feature_tensor = np.concatenate([obs_images, env_images, agt_images], axis=1)
-    return feature_tensor, np.delete(param, range(31, 41))
+    return feature_tensor, param
 
 
 if __name__ == "__main__":
