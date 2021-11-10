@@ -28,7 +28,7 @@ class TrainingUnit:
             stepTrain = self.stepTrain()
             yield
             loss = 0
-            for epoch_num in rangeForever():
+            for _ in rangeForever():
                 self._consumer.train()
                 for i in range(self._step_max()):
                     loss = next(stepTrain)

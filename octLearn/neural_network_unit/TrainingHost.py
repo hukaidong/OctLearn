@@ -4,7 +4,7 @@ import contextlib
 import torch
 from torch.utils.data.dataloader import DataLoader
 
-from octLearn.e.config import get_config
+from octLearn.g_config.config import get_config
 from octLearn.polices.autoencoder import Autoencoder
 from octLearn.polices.decipher import Decipher
 from octLearn.polices.activate_learn import QueryNetwork
@@ -15,7 +15,7 @@ from octLearn.neural_network_unit.QueryUnit import QueryUnit
 class TrainingHost:
 
     def __init__(self, configs):
-        self.config = configs
+        self.config = get_config()["misc"]
         self.autoencoder = None
         self.decipher = None
         self.requester = None
