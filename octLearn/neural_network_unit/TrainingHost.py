@@ -3,6 +3,7 @@ import contextlib
 
 import torch
 from torch.utils.data.dataloader import DataLoader
+from torch.utils.data import BatchSampler, SubsetRandomSampler
 
 from octLearn.g_config.config import get_config
 from octLearn.polices.autoencoder import Autoencoder
@@ -14,7 +15,7 @@ from octLearn.neural_network_unit.QueryUnit import QueryUnit
 
 class TrainingHost:
 
-    def __init__(self, configs):
+    def __init__(self):
         self.config = get_config()["misc"]
         self.autoencoder = None
         self.decipher = None
@@ -40,17 +41,16 @@ class TrainingHost:
 
         device = self.config['device']
 
-        data_sample = [d.unsqueeze(0) for d in dataset[0]]
+        data_sample = dataset.sample()
 
         self._data_image_extractor = image_preprocessor()
         self._data_param_extractor = param_preprocessor()
         imageI, imageO = self._data_image_extractor(data_sample)
         imageI, paramO = self._data_param_extractor(data_sample)
-
-        input_channels = imageI.shape[1]
-        output_channels = imageO.shape[1]
-        params_size = paramO.shape[1]
-        latent_size = self.config['latent_size']
+        input_channels = imageI.shape[0]
+        output_channels = imageO.shape[0]
+        params_size = paramO.shape[0]
+        latent_size = int(self.config['latent_size'])
 
         encoder_cls, encoder_network_base_cls = image_encoder
         decoder_cls, decoder_network_base_cls, distort_network_base_cls = image_decoder
@@ -94,17 +94,17 @@ class TrainingHost:
             self._decipher_lr_sched = lr_sched_cls(self._decipher_optimizer, **lr_sched_opts)
 
         def autoencoderDataIter():
-            data_loader = DataLoader(dataset, batch_size=self.config['batch_size'],
-                                     num_workers=self.config['num_workers'],
-                                     collate_fn=self.config.get('collate_fn', None), pin_memory=True)
+            sampler = BatchSampler(SubsetRandomSampler(dataset.keys()), int(self.config["batch_size"]), drop_last=False)
+            data_loader = DataLoader(dataset, batch_sampler=sampler, persistent_workers=True,
+                                     num_workers=int(self.config['num_workers']), pin_memory=True)
             while True:
                 for x in data_loader:
                     yield self._data_image_extractor(x)
 
         def decipherDataIter():
-            data_loader = DataLoader(dataset, batch_size=self.config['batch_size'],
-                                     num_workers=self.config['num_workers'],
-                                     collate_fn=self.config.get('collate_fn', None), pin_memory=True)
+            sampler = BatchSampler(SubsetRandomSampler(dataset.keys()), int(self.config["batch_size"]), drop_last=False)
+            data_loader = DataLoader(dataset, batch_sampler=sampler, persistent_workers=True,
+                                     num_workers=int(self.config['num_workers']), pin_memory=True)
             while True:
                 for x in data_loader:
                     yield self._data_param_extractor(x)

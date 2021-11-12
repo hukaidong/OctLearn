@@ -14,7 +14,7 @@ class TrainingUnit:
         self._optimizer = optimizer
         self._monitor = monitor
         self._lr_scheduler = lr_scheduler
-        self._step_max = lambda: host.config['step_per_epoch']
+        self._step_max = lambda: int(host.config['step_per_epoch'])
         self._device = host.config['device']
 
     def set_data_iter(self, data_iter):

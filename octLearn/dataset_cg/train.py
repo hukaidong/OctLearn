@@ -1,16 +1,13 @@
 import torch
-from torch import nn
-from torch.nn.functional import interpolate
 
 
-class PartialDataExtract(nn.Module):
-    def __init__(self, partial_num):
-        super(PartialDataExtract, self).__init__()
-        self.partial_num = partial_num
-
+class AEDataExtract(torch.nn.Module):
     def forward(self, data):
-        return data[self.partial_num]
+        return data[0], data[1]
 
+class DCDataExtract(torch.nn.Module):
+    def forward(self, data):
+        return data[0], data[2]
 
 def define_configs():
     from octLearn.g_config import config
@@ -39,8 +36,8 @@ def define_components():
     from torch.optim.lr_scheduler import ExponentialLR
 
     components = {
-        "image_preprocessor": lambda x: PartialDataExtract(0),
-        "param_preprocessor": lambda x: PartialDataExtract(1),
+        "image_preprocessor": lambda : AEDataExtract(),
+        "param_preprocessor": lambda : DCDataExtract(),
         "image_encoder": (Encoder, net.ImgToFlatNetwork),
         "image_decoder": (Decoder, net.FlatToImgNetwork, net.ImgToImgDisturbNetwork),
         "param_decipher": (net.FlatToFlatNetwork,),
@@ -54,25 +51,8 @@ def define_components():
 
     return components
 
-def steersim_call(query):
-    from os import environ
-    from subprocess import Popen, PIPE, STDOUT
-
-    steersim_command_path = environ["SteersimCommandPath"]
-    steersim_command_exec = environ["SteersimCommandExec"]
-    p = Popen(steersim_command_exec.split(), cwd=steersim_command_path,
-              stdout=None, stdin=PIPE, stderr=STDOUT)
-    p.communicate(input=query.encode())
-    p.wait()
-
-def steersim_require(queries):
-    from multiprocessing import Pool
-
-    with Pool() as p:
-        p.map(steersim_call, queries)
-
-
 def main():
+    from torch.utils.tensorboard import SummaryWriter
     from octLearn.dataset_cg.torch_dataset import HopDataset
     from octLearn.neural_network_unit.TrainingHost import TrainingHost
     define_configs()
@@ -80,9 +60,14 @@ def main():
     train_dataset = HopDataset(resolution=1)
     trainer = TrainingHost()
     trainer.build_network(train_dataset, **components)
-    # trainer.load()
+    writer = torch.utils.tensorboard.SummaryWriter()
+    train_task = trainer.autoencoder.loopTrain(writer)
+    print(next(train_task))
+
 
 if __name__ == "__main__":
-    from os import environ
+    import numpy as np
 
-    steersim_require(("Random" for i in range(5)))
+    #numbers = np.random.uniform(0, 1, (10, 43))
+    #steersim_call_parallel(numbers)
+    main()
