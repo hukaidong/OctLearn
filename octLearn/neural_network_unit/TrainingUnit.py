@@ -1,4 +1,5 @@
 import torch
+import contextlib
 
 def rangeForever():
     num = 0
@@ -8,8 +9,8 @@ def rangeForever():
 
 
 class TrainingUnit:
-    def __init__(self, data_iter, consumer, optimizer, lr_scheduler, monitor, host):
-        self._data_iter = data_iter
+    def __init__(self, preprocessor, consumer, optimizer, lr_scheduler, monitor, host):
+        self._preprocessor = preprocessor
         self._consumer = consumer
         self._optimizer = optimizer
         self._monitor = monitor
@@ -17,67 +18,43 @@ class TrainingUnit:
         self._step_max = lambda: int(host.config['step_per_epoch'])
         self._device = host.config['device']
 
-    def set_data_iter(self, data_iter):
-        self._data_iter = data_iter
+    def loop_train(self, data_loader, summary_writer=None):
+        data_iter = data_loader.get_data_iter()
+        stepTrain = self.step_train(data_iter)
+        loss = 0
+        for _ in rangeForever():
+            self._consumer.train()
+            for i in range(self._step_max()):
+                loss = next(stepTrain)
 
-    def get_data_iter(self, data_iter):
-        return self._data_iter
+            if self._lr_scheduler:
+                self._lr_scheduler.step()
+            if summary_writer:
+                self._monitor(summary_writer)
+            yield loss
 
-    def loopTrain(self, summary_writer=None):
-        def loop_generator():
-            stepTrain = self.stepTrain()
-            yield
-            loss = 0
-            for _ in rangeForever():
-                self._consumer.train()
-                for i in range(self._step_max()):
-                    loss = next(stepTrain)
+    def step_train(self, data_iter):
+        for data in data_iter:
+            tensorIn, tensorOut = self._preprocessor(data)
+            tensorIn = tensorIn.to(self._device)
+            tensorOut = tensorOut.to(self._device)
+            self._optimizer.zero_grad()
+            loss = self._consumer.compute_loss(tensorIn, tensorOut)
+            loss.backward()
+            self._optimizer.step()
+            yield loss
 
-                if self._lr_scheduler:
-                    self._lr_scheduler.step()
-                if summary_writer:
-                    self._monitor(summary_writer)
-                yield loss
-
-        gen = loop_generator()
-        next(gen)
-        return gen
-
-    def stepTrain(self, alt_training=False):
-        def step_generator():
-            data_iter = self._data_iter  # freeze dataset use
-            yield
-
-            for tensorIn, tensorOut in data_iter:
+    def score(self, data_loader, summary_writer=None):
+        data_iter = data_loader.get_data_iter()
+        for data in data_iter:
+            with torch.no_grad():
+                tensorIn, tensorOut = self._preprocessor(data)
                 tensorIn = tensorIn.to(self._device)
                 tensorOut = tensorOut.to(self._device)
-                self._optimizer.zero_grad()
                 loss = self._consumer.compute_loss(tensorIn, tensorOut)
-                loss.backward()
-                self._optimizer.step()
-                yield loss
-        
-        gen = step_generator()
-        next(gen)
-        return gen
-
-    def score(self, summary_writer=None):
-        def step_generator():
-            data_iter = self._data_iter  # freeze dataset use
-            yield
-
-            for tensorIn, tensorOut in data_iter:
-                with torch.no_grad():
-                    tensorIn = tensorIn.to(self._device)
-                    tensorOut = tensorOut.to(self._device)
-                    loss = self._consumer.compute_loss(tensorIn, tensorOut)
-                if summary_writer:
-                    self._monitor(summary_writer, test=True)
-                yield loss
-
-        gen = step_generator()
-        next(gen)
-        return gen
+            if summary_writer:
+                self._monitor(summary_writer, test=True)
+            yield loss
 
     def forward(self, data_input):
         with torch.no_grad():

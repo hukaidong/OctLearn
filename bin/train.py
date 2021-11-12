@@ -66,7 +66,7 @@ def main():
 
     db = configs['mongo_adapter']()
     train_dataset = HopDataset(db.Case_Ids()[:num_train_data])
-    trainer = TrainingHost(configs)
+    trainer = TrainingHost()
     trainer.build_network(train_dataset, **components)
 
     #  writer = SummaryWriter()
@@ -84,7 +84,7 @@ def autoencoder_train(trainer, writer, train_dataset):
     data = configs['mongo_adapter']('normal', 'cross_valid')
     test_dataset = HopDataset(data.Case_Ids()[:num_test_data])
 
-    train_task = trainer.autoencoder.loopTrain(writer)
+    train_task = trainer.autoencoder.loop_train(writer)
 
     with trainer.extern_dataset(test_dataset):
         test_task = trainer.autoencoder.score(writer)
@@ -109,7 +109,7 @@ def decipher_train(trainer, writer, train_dataset=None):
     data = configs['mongo_adapter']('normal', 'cross_valid')
     test_dataset = HopDataset(data.Case_Ids()[:num_test_data])
 
-    train_task = trainer.decipher.loopTrain(writer)
+    train_task = trainer.decipher.loop_train(writer)
 
     with trainer.extern_dataset(test_dataset):
         test_task = trainer.decipher.score(writer)

@@ -17,7 +17,7 @@ def define_configs():
         "device": "cuda:0",
         "latent_size": 400,
         "num_workers": 8,
-        "step_per_epoch": 1000,
+        "step_per_epoch": 1,
         "batch_size": 128,
         "infile_path": ".",
         "outfile_path": ".",
@@ -54,20 +54,45 @@ def define_components():
 def main():
     from torch.utils.tensorboard import SummaryWriter
     from octLearn.dataset_cg.torch_dataset import HopDataset
+    from octLearn.dataset_cg.torch_batch_sample import CgBatchSampler
     from octLearn.neural_network_unit.TrainingHost import TrainingHost
+    from octLearn.dataset_cg.steersim_quest import steersim_call_parallel
     define_configs()
     components = define_components()
     train_dataset = HopDataset(resolution=1)
     trainer = TrainingHost()
     trainer.build_network(train_dataset, **components)
     writer = torch.utils.tensorboard.SummaryWriter()
-    train_task = trainer.autoencoder.loopTrain(writer)
-    print(next(train_task))
+    data_loader = CgBatchSampler(train_dataset, 128, 8)
+    ae_train_task = trainer.autoencoder.loop_train(data_loader, summary_writer=writer)
+    dc_train_task = trainer.decipher.loop_train(data_loader, summary_writer=writer)
 
+    try:
+        for step in range(800):
+            print("Autoencoder: Train step {} ends, loss: {}, {}".format(
+                step, float(next(ae_train_task)), float(0.0)))
+            print("Decipher: Train step {} ends, loss: {}, {}".format(
+                step, float(next(dc_train_task)), float(0.0)))
+
+            sample_list = trainer.requester.sample(20)
+            steersim_call_parallel(sample_list)
+            data_loader.update_keys()
+
+    except KeyboardInterrupt:
+        pass
+
+def initial_sample_steersim():
+    import os
+    import shutil
+    import numpy as np
+    from octLearn.dataset_cg.steersim_quest import steersim_call_parallel
+
+
+    shutil.rmtree(os.environ["SteersimRecordPath"], ignore_errors=True)
+    os.makedirs(os.environ["SteersimRecordPath"], exist_ok=True)
+    numbers = np.random.uniform(0, 1, (10, 43))
+    steersim_call_parallel(numbers)
 
 if __name__ == "__main__":
-    import numpy as np
-
-    #numbers = np.random.uniform(0, 1, (10, 43))
-    #steersim_call_parallel(numbers)
+    initial_sample_steersim()
     main()

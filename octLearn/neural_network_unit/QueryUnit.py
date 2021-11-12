@@ -10,5 +10,4 @@ class QueryUnit:
         self.network.eval()
         with torch.no_grad():
             sample_t = self.network(num_sample)
-        sample = DenormalizeAgentParameters(sample_t.cpu().numpy())
-        return sample
+        return sample_t.cpu().numpy()
