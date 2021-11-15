@@ -47,11 +47,10 @@ class HopDataset(IterableDataset):
 
     def __len__(self):
         num_per_id = ObjectIdTrajectoryNums(self.case_list[0])
-        bucket = len(self.case_list)*num_per_id
+        bucket = len(self.case_list) * num_per_id
         if self.data_limit > 0:
             return min(self.data_limit, bucket)
         return bucket
-
 
     def __init__(self, case_list, from_database=None):
         super(HopDataset).__init__()

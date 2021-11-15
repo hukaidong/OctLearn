@@ -163,9 +163,10 @@ class TrainingHost:
                 imin = torch.min(img_out)
                 imax = torch.max(img_out)
                 img_norm = (img_out - imin) / (imax - imin)
-                summary_writer.add_image(prefix + "/truth-%d" % i, img_in, step)
-                summary_writer.add_image(prefix + "/pred-%d" % i, img_out, step)
-                summary_writer.add_image(prefix + "/norm-%d" % i, img_norm, step)
+                summary_writer.add_image(prefix + "-truth/%d" % i, img_in, step)
+                summary_writer.add_image(prefix + "-pred/%d" % i, img_out, step)
+                summary_writer.add_image(prefix + "-norm/%d" % i, img_norm, step)
+                summary_writer.add_image(prefix + "-diff/%d" % i, torch.abs(img_in - img_out), step)
 
         return autoencoderMonitor
 

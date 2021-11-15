@@ -61,6 +61,7 @@ def define_components():
 
 
 def main():
+    import numpy as np
     from torch.utils.tensorboard import SummaryWriter
     from octLearn.dataset_cg.torch_dataset import HopDataset, HopTestDataset
     from octLearn.dataset_cg.torch_batch_sample import CgBatchSampler
@@ -91,10 +92,12 @@ def main():
             print(f"\t\tTraining loss: {float_next(task_dc_train)}")
             print(f"\t\tTest loss: {float_next(task_dc_test)}")
 
-            sample_list = trainer.requester.sample(20)
-            steersim_call_parallel(sample_list)
-            sample_list = trainer.requester.sample(10)
-            steersim_call_parallel(sample_list, generate_for_testcases=True)
+            numbers = np.random.uniform(0, 1, (10, 43))
+            steersim_call_parallel(numbers)
+            # sample_list = trainer.requester.sample(20)
+            # steersim_call_parallel(sample_list)
+            # sample_list = trainer.requester.sample(10)
+            # steersim_call_parallel(sample_list, generate_for_testcases=True)
             loader_train.update_keys()
             loader_test.update_keys()
 
@@ -117,5 +120,5 @@ def initial_sample_steersim():
 
 
 if __name__ == "__main__":
-    initial_sample_steersim()
+    #initial_sample_steersim()
     main()
