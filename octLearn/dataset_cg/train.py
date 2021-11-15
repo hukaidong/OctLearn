@@ -84,12 +84,12 @@ def main():
     try:
         for step in range(800):
             print(f"Training Step {step}")
-            print(f"Autoencoder: ")
-            print(f"\tTraining loss: {float_next(task_ae_train)}")
-            print(f"\tTest loss: {float_next(task_ae_test)}")
-            print(f"Decipher: ")
-            print(f"\tTraining loss: {float_next(task_dc_train)}")
-            print(f"\tTest loss: {float_next(task_dc_test)}")
+            print(f"\tAutoencoder: ")
+            print(f"\t\tTraining loss: {float_next(task_ae_train)}")
+            print(f"\t\tTest loss: {float_next(task_ae_test)}")
+            print(f"\tDecipher: ")
+            print(f"\t\tTraining loss: {float_next(task_dc_train)}")
+            print(f"\t\tTest loss: {float_next(task_dc_test)}")
 
             sample_list = trainer.requester.sample(20)
             steersim_call_parallel(sample_list)
