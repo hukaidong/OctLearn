@@ -1,13 +1,19 @@
 import torch
 
 
+def float_next(val):
+    return float(next(val))
+
+
 class AEDataExtract(torch.nn.Module):
     def forward(self, data):
         return data[0], data[1]
 
+
 class DCDataExtract(torch.nn.Module):
     def forward(self, data):
         return data[0], data[2]
+
 
 def define_configs():
     from octLearn.g_config import config
@@ -17,7 +23,7 @@ def define_configs():
         "device": "cuda:0",
         "latent_size": 400,
         "num_workers": 8,
-        "step_per_epoch": 1,
+        "step_per_epoch": 1000,
         "batch_size": 128,
         "infile_path": ".",
         "outfile_path": ".",
@@ -36,8 +42,8 @@ def define_components():
     from torch.optim.lr_scheduler import ExponentialLR
 
     components = {
-        "image_preprocessor": lambda : AEDataExtract(),
-        "param_preprocessor": lambda : DCDataExtract(),
+        "image_preprocessor": lambda: AEDataExtract(),
+        "param_preprocessor": lambda: DCDataExtract(),
         "image_encoder": (Encoder, net.ImgToFlatNetwork),
         "image_decoder": (Decoder, net.FlatToImgNetwork, net.ImgToImgDisturbNetwork),
         "param_decipher": (net.FlatToFlatNetwork,),
@@ -51,35 +57,50 @@ def define_components():
 
     return components
 
+
+
+
 def main():
     from torch.utils.tensorboard import SummaryWriter
-    from octLearn.dataset_cg.torch_dataset import HopDataset
+    from octLearn.dataset_cg.torch_dataset import HopDataset, HopTestDataset
     from octLearn.dataset_cg.torch_batch_sample import CgBatchSampler
     from octLearn.neural_network_unit.TrainingHost import TrainingHost
     from octLearn.dataset_cg.steersim_quest import steersim_call_parallel
     define_configs()
     components = define_components()
-    train_dataset = HopDataset(resolution=1)
+    dataset_train = HopDataset(resolution=1)
     trainer = TrainingHost()
-    trainer.build_network(train_dataset, **components)
+    trainer.build_network(dataset_train, **components)
     writer = torch.utils.tensorboard.SummaryWriter()
-    data_loader = CgBatchSampler(train_dataset, 128, 8)
-    ae_train_task = trainer.autoencoder.loop_train(data_loader, summary_writer=writer)
-    dc_train_task = trainer.decipher.loop_train(data_loader, summary_writer=writer)
+    loader_train = CgBatchSampler(dataset_train, 128, 8)
+    task_ae_train = trainer.autoencoder.loop_train(loader_train, summary_writer=writer)
+    task_dc_train = trainer.decipher.loop_train(loader_train, summary_writer=writer)
+    loader_train = CgBatchSampler(dataset_train, 128, 8)
+    dataset_test = HopTestDataset(resolution=1)
+    loader_test = CgBatchSampler(dataset_test, 128, 8)
+    task_ae_test = trainer.autoencoder.score(loader_test, summary_writer=writer)
+    task_dc_test = trainer.decipher.score(loader_test, summary_writer=writer)
 
     try:
         for step in range(800):
-            print("Autoencoder: Train step {} ends, loss: {}, {}".format(
-                step, float(next(ae_train_task)), float(0.0)))
-            print("Decipher: Train step {} ends, loss: {}, {}".format(
-                step, float(next(dc_train_task)), float(0.0)))
+            print(f"Training Step {step}")
+            print(f"Autoencoder: ")
+            print(f"\tTraining loss: {float_next(task_ae_train)}")
+            print(f"\tTest loss: {float_next(task_ae_test)}")
+            print(f"Decipher: ")
+            print(f"\tTraining loss: {float_next(task_dc_train)}")
+            print(f"\tTest loss: {float_next(task_dc_test)}")
 
             sample_list = trainer.requester.sample(20)
             steersim_call_parallel(sample_list)
-            data_loader.update_keys()
+            sample_list = trainer.requester.sample(10)
+            steersim_call_parallel(sample_list, generate_for_testcases=True)
+            loader_train.update_keys()
+            loader_test.update_keys()
 
     except KeyboardInterrupt:
         pass
+
 
 def initial_sample_steersim():
     import os
@@ -87,11 +108,13 @@ def initial_sample_steersim():
     import numpy as np
     from octLearn.dataset_cg.steersim_quest import steersim_call_parallel
 
-
     shutil.rmtree(os.environ["SteersimRecordPath"], ignore_errors=True)
     os.makedirs(os.environ["SteersimRecordPath"], exist_ok=True)
     numbers = np.random.uniform(0, 1, (10, 43))
     steersim_call_parallel(numbers)
+    numbers = np.random.uniform(0, 1, (5, 43))
+    steersim_call_parallel(numbers, generate_for_testcases=True)
+
 
 if __name__ == "__main__":
     initial_sample_steersim()

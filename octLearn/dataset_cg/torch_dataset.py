@@ -9,7 +9,7 @@ from octLearn.dataset_cg.read_binary import get_trajectory_feature_from_file
 
 class HopDataset(Dataset):
     def __init__(self, resolution):
-        super(HopDataset).__init__()
+        super(HopDataset, self).__init__()
         self.feature_cache = {}
         self.resolution = resolution
         self.base_path = Path(environ["SteersimRecordPath"])
@@ -38,6 +38,12 @@ class HopDataset(Dataset):
         parm = torch.Tensor(feature[1])
         for i in range(250):
             self.feature_cache[(filename, i)] = [traj[i], traj[i][[3,]], parm]
+
+
+class HopTestDataset(HopDataset):
+    def __init__(self, *args, **kwargs):
+        super(HopTestDataset, self).__init__(*args, **kwargs)
+        self.base_path = self.base_path / "test"
 
 
 if __name__ == "__main__":
