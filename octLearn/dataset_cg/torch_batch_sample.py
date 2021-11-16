@@ -17,5 +17,4 @@ class CgBatchSampler:
         self.sampler.indices = self.dataset.keys()
 
     def get_data_iter(self):
-        while True:
-            yield from self.data_loader
+        yield from self.data_loader

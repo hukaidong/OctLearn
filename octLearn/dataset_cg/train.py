@@ -67,14 +67,17 @@ def main():
 
     define_configs()
     components = define_components()
+
     dataset_train = HopDataset(resolution=1)
     trainer = TrainingHost()
     trainer.build_network(dataset_train, **components)
-    loader_train = CgBatchSampler(dataset_train, 128, 8)
     summary_writer = SummaryWriter()
+
+    dataset_train = HopDataset(resolution=1)
+    loader_train = CgBatchSampler(dataset_train, 128, 8)
     task_ae_train = trainer.autoencoder.loop_train(loader_train, summary_writer=summary_writer)
     task_dc_train = trainer.decipher.loop_train(loader_train, summary_writer=summary_writer)
-    loader_train = CgBatchSampler(dataset_train, 128, 8)
+
     dataset_test = HopTestDataset(resolution=1)
     loader_test = CgBatchSampler(dataset_test, 128, 8)
     task_ae_test = trainer.autoencoder.score(loader_test, summary_writer=summary_writer)
@@ -118,14 +121,14 @@ def initial_sample_steersim():
     import numpy as np
     from octLearn.dataset_cg.steersim_quest import steersim_call_parallel
 
-    ask_for_regenerate = input("Remove steersim record path and regen?")
-    if ask_for_regenerate == "n":
-        return
+    # ask_for_regenerate = input("Remove steersim record path and regen?")
+    # if ask_for_regenerate == "n":
+    #     return
     shutil.rmtree(os.environ["SteersimRecordPath"], ignore_errors=True)
     os.makedirs(os.environ["SteersimRecordPath"], exist_ok=True)
-    numbers = np.random.uniform(0, 1, (10, 43))
-    steersim_call_parallel(numbers)
     numbers = np.random.uniform(0, 1, (5, 43))
+    steersim_call_parallel(numbers)
+    numbers = np.random.uniform(0, 1, (1, 43))
     steersim_call_parallel(numbers, generate_for_testcases=True)
 
 
