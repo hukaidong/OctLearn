@@ -1,7 +1,7 @@
 import os
 import pickle
-from os import environ as ENV
 from os.path import join as pJoin
+
 from octLearn.e.config import get_config
 
 

@@ -1,9 +1,9 @@
-import numpy as np
 import subprocess
-
+from multiprocessing import Pool
 from os import environ, makedirs
 from subprocess import Popen
-from multiprocessing import Pool
+
+import numpy as np
 
 
 def steersim_call(query, env):

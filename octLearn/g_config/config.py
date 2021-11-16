@@ -3,6 +3,7 @@ import os
 
 import octLearn
 
+
 def reset():
     config_dir = get_config_dir()
     config_file = os.path.join(config_dir, 'default.ini')

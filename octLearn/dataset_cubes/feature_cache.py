@@ -4,12 +4,12 @@ from functools import lru_cache
 from os import path
 
 import numpy
-
-from octLearn.mongo_stuff.mongo_instance import MongoInstance
-from octLearn.mongo_stuff.mongo_offline import MongoOffline
 from octLearn.e.config import get_config
+
 from octLearn.dataset_cubes.agent_parameters import NormalizeAgentParameters
 from octLearn.dataset_cubes.data_rasterized import RasterizeData
+from octLearn.mongo_stuff.mongo_instance import MongoInstance
+from octLearn.mongo_stuff.mongo_offline import MongoOffline
 from octLearn.utils import NoDataError
 
 

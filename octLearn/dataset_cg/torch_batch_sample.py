@@ -1,5 +1,5 @@
-from torch.utils.data.dataloader import DataLoader
 from torch.utils.data import BatchSampler, SubsetRandomSampler
+from torch.utils.data.dataloader import DataLoader
 
 
 class CgBatchSampler:

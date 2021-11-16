@@ -3,11 +3,11 @@ import os.path
 import torch
 
 from octLearn.g_config.config import get_config
+from octLearn.neural_network_unit.QueryUnit import QueryUnit
+from octLearn.neural_network_unit.TrainingUnit import TrainingUnit
+from octLearn.polices.activate_learn import QueryNetwork
 from octLearn.polices.autoencoder import Autoencoder
 from octLearn.polices.decipher import Decipher
-from octLearn.polices.activate_learn import QueryNetwork
-from octLearn.neural_network_unit.TrainingUnit import TrainingUnit
-from octLearn.neural_network_unit.QueryUnit import QueryUnit
 
 
 class TrainingHost:
@@ -108,65 +108,56 @@ class TrainingHost:
         self.requester = QueryUnit(self._query_network)
 
     def initialize_de_monitor(self):
-        self.de_step = 0
-
         def decipherMonitor(summary_writer, test=False):
             if not test:
-                step = self.de_step
-                self.de_step += 1
+                prefix = "decipher"
             else:
-                step = self.ae_step
                 prefix = "decipher-test"
 
             if self._decipher_lr_sched:
                 current_lr = self._decipher_lr_sched.get_last_lr()[-1]
-                summary_writer.add_scalar("decipher/lr", current_lr, step)
+                summary_writer.add_scalar(prefix + "/lr", current_lr)
 
             states = self._decipher_network.last_states
-            summary_writer.add_scalar("decipher/mean_loss", states['mean_loss'], step)
+            summary_writer.add_scalar(prefix + "/mean_loss", states['mean_loss'])
             for i in range(3):
                 img_in = states['img_input'][i]
-                summary_writer.add_image("decipher/map-%d" % i, img_in[[1, ]], step)
-                summary_writer.add_image("decipher/trajectory-%d" % i, img_in[[0, ]], step)
-                summary_writer.add_scalar("decipher/indv-loss-mean-%d" % i, states['loss'][i].mean(), step)
+                summary_writer.add_image(prefix + "/map-%d" % i, img_in[[1, ]])
+                summary_writer.add_image(prefix + "/trajectory-%d" % i, img_in[[0, ]])
+                summary_writer.add_scalar(prefix + "/indv-loss-mean-%d" % i, states['loss'][i].mean())
 
             parm_losses = states['loss']
             if parm_losses.shape[1] > 10:
                 return
             for i in range(parm_losses.shape[1]):
-                summary_writer.add_histogram("decipher/loss-param-%d" % i, states['loss'][:, i], step)
+                summary_writer.add_histogram(prefix + "/loss-param-%d" % i, states['loss'][:, i])
 
         return decipherMonitor
 
     def initialize_ae_monitor(self):
-        self.ae_step = 0
-
         def autoencoderMonitor(summary_writer, test=False):
             if not test:
                 prefix = "autoencoder"
-                step = self.ae_step
-                self.ae_step += 1
             else:
-                step = self.ae_step
                 prefix = "autoencoder-test"
 
             if self._autoencoder_lr_sched:
                 current_lr = self._autoencoder_lr_sched.get_last_lr()[-1]
-                summary_writer.add_scalar(prefix + "/lr", current_lr, step)
+                summary_writer.add_scalar(prefix + "/lr", current_lr)
 
             states = self._policy.last_states
             for key in ['d_x_xp', 'log_d_x', 'd_xp_xd', 'log_p_z']:
-                summary_writer.add_scalar(prefix + "/%s" % key, states[key].mean(), step)
+                summary_writer.add_scalar(prefix + "/%s" % key, states[key].mean())
             for i in range(3):
                 img_in = states['x'][i]
                 img_out = states['xpred'][i]
                 imin = torch.min(img_out)
                 imax = torch.max(img_out)
                 img_norm = (img_out - imin) / (imax - imin)
-                summary_writer.add_image(prefix + "-truth/%d" % i, img_in, step)
-                summary_writer.add_image(prefix + "-pred/%d" % i, img_out, step)
-                summary_writer.add_image(prefix + "-norm/%d" % i, img_norm, step)
-                summary_writer.add_image(prefix + "-diff/%d" % i, torch.abs(img_in - img_out), step)
+                summary_writer.add_image(prefix + "-truth/%d" % i, img_in)
+                summary_writer.add_image(prefix + "-pred/%d" % i, img_out)
+                summary_writer.add_image(prefix + "-norm/%d" % i, img_norm)
+                summary_writer.add_image(prefix + "-diff/%d" % i, torch.abs(img_in - img_out))
 
         return autoencoderMonitor
 

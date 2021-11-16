@@ -1,5 +1,5 @@
-from torch import normal
 from torch import nn
+from torch import normal
 
 
 class QueryNetwork(nn.Module):

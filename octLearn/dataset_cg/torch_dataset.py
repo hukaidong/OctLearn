@@ -1,9 +1,10 @@
-import numpy as np
-import torch
 import gzip
-
 from os import environ
 from pathlib import Path
+
+import numpy as np
+import torch
+
 from octLearn.dataset_cg.read_binary import get_trajectory_feature_from_file
 
 

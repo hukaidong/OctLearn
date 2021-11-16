@@ -1,8 +1,7 @@
 import os
-from os import environ as ENV
 
 import numpy as np
-from octLearn.e.config import get_config
+from octLearn.g_config.config import get_config
 
 
 def prepare_trajectories(filename):
