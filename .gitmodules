@@ -1,0 +1,3 @@
+[submodule "cooperate/steersuite"]
+	path = cooperate/steersuite
+	url = git@github.com:hukaidong/Steersuite-ParameterLearning.git
