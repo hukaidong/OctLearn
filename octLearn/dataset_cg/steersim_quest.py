@@ -1,17 +1,20 @@
 import subprocess
+import logging
 from multiprocessing import Pool
 from os import environ, makedirs
 from subprocess import Popen
 
 import numpy as np
 
+logger = logging.getLogger(__name__)
 
 def steersim_call(query, env):
     steersim_command_path = env["SteersimCommandPath"]
     steersim_command_exec = env["SteersimCommandExec"]
     p = Popen(steersim_command_exec.split(), cwd=steersim_command_path,
-              stdout=subprocess.DEVNULL, stdin=subprocess.PIPE, stderr=subprocess.STDOUT, env=env)
-    p.communicate(input=query.encode())
+              stdout=subprocess.PIPE, stdin=subprocess.PIPE, stderr=subprocess.STDOUT, env=env)
+    stdout_line, stderr_line = p.communicate(input=query.encode())
+    logging.debug('From subprocess: %r', stdout_line)
     p.wait()
 
 
