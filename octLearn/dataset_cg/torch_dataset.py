@@ -35,7 +35,8 @@ class HopDataset(torch.utils.data.dataset.Dataset):
 
     def keys(self):
         key_list = []
-        feature_files = self.base_path.glob("*.bin")
+        feature_files = list(self.base_path.glob("*.bin"))
+        logger.debug("There are %d files in basepath", len(feature_files))
         for fname in feature_files:
             key_list.extend([f"{fname}+{k}" for k in range(250)])
         return key_list
