@@ -136,12 +136,7 @@ def initial_sample_steersim():
 if __name__ == "__main__":
     import logging
 
-    logger = logging.getLogger()
-    formatter = logging.Formatter('%(asctime)s - %(levelname)s - %(message)s')
-    handler = logging.StreamHandler()
-    handler.setFormatter(formatter)
-    logger.setLevel(logging.DEBUG)
-    logger.addHandler(handler)
+    logging.basicConfig(format="%(asctime)s - %(name)s - %(levelname)s - %(message)s", level=logging.DEBUG)
 
     initial_sample_steersim()
     main()

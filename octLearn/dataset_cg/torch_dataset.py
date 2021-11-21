@@ -10,7 +10,7 @@ import logging
 from octLearn.dataset_cg.read_binary import get_trajectory_feature_from_file
 
 
-logger = logging.getLogger()
+logger = logging.getLogger(__name__)
 
 
 class HopDataset(torch.utils.data.dataset.Dataset):

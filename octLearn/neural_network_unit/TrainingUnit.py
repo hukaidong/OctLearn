@@ -1,7 +1,7 @@
 import torch
 import logging
 
-logger = logging.getLogger()
+logger = logging.getLogger(__name__)
 
 
 def rangeForever():
