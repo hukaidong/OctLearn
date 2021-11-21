@@ -4,8 +4,13 @@ from pathlib import Path
 
 import numpy as np
 import torch
+import logging
+
 
 from octLearn.dataset_cg.read_binary import get_trajectory_feature_from_file
+
+
+logger = logging.getLogger()
 
 
 class HopDataset(torch.utils.data.dataset.Dataset):
@@ -26,7 +31,7 @@ class HopDataset(torch.utils.data.dataset.Dataset):
             gzip.decompress(fdict["traj"])).reshape(fdict["fshape"]))
         param = torch.Tensor(np.frombuffer(
             gzip.decompress(fdict["param"]), dtype=np.float32))
-        return traj, traj[[3, ]], param
+        return traj[[0, 3]], traj[[3, ]], param
 
     def keys(self):
         key_list = []

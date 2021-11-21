@@ -1,4 +1,7 @@
 import torch
+import logging
+
+logger = logging.getLogger()
 
 
 def rangeForever():
@@ -22,6 +25,7 @@ class TrainingUnit:
         stepTrain = self.step_train(data_loader)
         loss = 0
         for _ in rangeForever():
+            logger.debug("Loop training begin")
             self._consumer.train()
             for i in range(self._step_max()):
                 loss = next(stepTrain)
@@ -45,11 +49,12 @@ class TrainingUnit:
                 self._optimizer.step()
                 yield loss
                 full_data_batch += 1
-            # print(f"[DEBUG] Dataset reaches end, restart. {full_data_batch} batches were trained in this round.", end="\r")
+            logger.debug(f"Dataset reaches end, restart. {full_data_batch} batches were trained in this round.")
 
     def score(self, data_loader, summary_writer=None):
         while True:
             for data in data_loader.get_data_iter():
+                logger.debug("Test scoring")
                 with torch.no_grad():
                     tensorIn, tensorOut = self._preprocessor(data)
                     tensorIn = tensorIn.to(self._device)
@@ -58,6 +63,7 @@ class TrainingUnit:
                 if summary_writer:
                     self._monitor(summary_writer, test=True)
                 yield loss
+            logger.debug(f"Scoring Dataset reaches end, restart.")
 
     def forward(self, data_input):
         with torch.no_grad():

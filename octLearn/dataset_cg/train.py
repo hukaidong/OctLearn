@@ -102,6 +102,7 @@ def main():
             print(f"\t\tTest loss: {loss_dc_test}")
             summary_writer.add_scalars("main-loss/decipher", {"train": loss_dc_train, "test": loss_dc_test})
 
+            print(f"Simulating Step {step}")
             # numbers = np.random.uniform(0, 1, (10, 43))
             # steersim_call_parallel(numbers)
             sample_list = trainer.requester.sample(2)
@@ -133,5 +134,14 @@ def initial_sample_steersim():
 
 
 if __name__ == "__main__":
+    import logging
+
+    logger = logging.getLogger()
+    formatter = logging.Formatter('%(asctime)s - %(levelname)s - %(message)s')
+    handler = logging.StreamHandler()
+    handler.setFormatter(formatter)
+    logger.setLevel(logging.DEBUG)
+    logger.addHandler(handler)
+
     initial_sample_steersim()
     main()
