@@ -1,7 +1,11 @@
 import numpy as np
+import logging
+
+logger = logging.getLogger(__name__)
 
 
 def trajectory_to_image_slow(trajectory, rect, resolution):
+
     pixXsize = np.ceil(np.abs(rect["xmax"]-rect["xmin"])/resolution).astype(int)
     pixYsize = np.ceil(np.abs(rect["ymax"]-rect["ymin"])/resolution).astype(int)
     image = np.zeros([pixYsize, pixXsize])
@@ -17,6 +21,8 @@ def trajectory_to_image_slow(trajectory, rect, resolution):
 def trajectory_to_image(trajectory, rect, resolution):
     pixXsize = np.ceil(np.abs(rect["xmax"]-rect["xmin"])/resolution).astype(int)
     pixYsize = np.ceil(np.abs(rect["ymax"]-rect["ymin"])/resolution).astype(int)
+    logger.debug("drawing agent trajectory, canvas size %dx%d", pixXsize, pixYsize)
+
     image = np.zeros([pixYsize, pixXsize])
 
     ground_zero = [rect["xmin"], rect["ymin"]]

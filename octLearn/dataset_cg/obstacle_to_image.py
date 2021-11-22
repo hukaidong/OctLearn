@@ -1,4 +1,7 @@
 import numpy as np
+import logging
+
+logger = logging.getLogger(__name__)
 
 
 def obstacle_to_image_slow(obstacleType, obstacleInfo, canvas_rect, resolution):
@@ -35,6 +38,7 @@ def obstacle_to_image_slow(obstacleType, obstacleInfo, canvas_rect, resolution):
 def draw_box_in_image(box_param, canvas_rect, resolution, image_out):
     xmin, xmax, ymin, ymax = box_param
     pixYsize, pixXsize = image_out.shape
+    logger.debug("drawing box obstacle, canvas size %dx%d", pixXsize, pixYsize)
     for xidx in range(pixXsize):
         for yidx in range(pixYsize):
             xpos = canvas_rect["xmin"] + resolution * xidx
@@ -47,6 +51,7 @@ def draw_box_in_image(box_param, canvas_rect, resolution, image_out):
 def draw_circ_in_image(circ_param, canvas_rect, resolution, image_out):
     xcen, ycen, rad = circ_param
     pixYsize, pixXsize = image_out.shape
+    logger.debug("drawing circ obstacle, canvas size %dx%d", pixXsize, pixYsize)
     for xidx in range(pixXsize):
         for yidx in range(pixYsize):
             xpos = canvas_rect["xmin"] + resolution * xidx
@@ -59,6 +64,7 @@ def draw_circ_in_image(circ_param, canvas_rect, resolution, image_out):
 def draw_orie_in_image(orie_param, canvas_rect, resolution, image_out):
     xcen, ycen, xlen, ylen, deg = orie_param
     pixYsize, pixXsize = image_out.shape
+    logger.debug("drawing orie obstacle, canvas size %dx%d", pixXsize, pixYsize)
     rad = deg / 180 * np.pi
     rot_mtx = np.array([[np.cos(rad), -np.sin(rad)], [np.sin(rad), np.cos(rad)]])
     for xidx in range(pixXsize):

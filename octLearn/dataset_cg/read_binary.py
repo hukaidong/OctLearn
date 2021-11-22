@@ -45,14 +45,19 @@ def get_trajectory_feature_from_file(filename, resolution):
     from octLearn.dataset_cg.trajectory_to_image import task_to_image
     from octLearn.dataset_cg.obstacle_to_image import obstacle_to_image_slow
 
+    logger.debug("Processing file %s, resolution %f", filename, resolution)
     obt, obi, param, traj = read_trajectory_binary(filename)
     agt_images = np.array([trajectory_to_image(t, env1_rect, resolution) for t in traj])
+    logger.debug("%s: Agent image generated", filename)
     agt_images = np.expand_dims(agt_images, axis=1)
     num_agts = agt_images.shape[0]
     env_images = np.array([task_to_image(t, env1_rect, resolution) for t in traj])
+    logger.debug("%s: Task image generated", filename)
     obs_image = np.array(obstacle_to_image_slow(obt, obi, env1_rect, resolution))
     obs_images = np.repeat(np.expand_dims(obs_image, [0, 1]), num_agts, axis=0)
+    logger.debug("%s: Obstacle image generated", filename)
     feature_tensor = np.concatenate([obs_images, env_images, agt_images], axis=1)
+    logger.debug("%s: Obstacle image generated", filename)
     logger.debug("Post processing file %s completed", filename)
     return feature_tensor, param
 
