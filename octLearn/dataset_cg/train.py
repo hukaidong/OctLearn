@@ -25,7 +25,7 @@ def define_configs():
     config.update_config({
         "device": "cuda:0",
         "latent_size": 400,
-        "num_workers": 1,
+        "num_workers": 8,
         "step_per_epoch": 200,
         "batch_size": 128,
         "infile_path": ".",
@@ -139,6 +139,7 @@ def initial_sample_steersim():
 
 
 if __name__ == "__main__":
-    logging.basicConfig(format="%(asctime)s - %(name)s - %(levelname)s - %(message)s", level=logging.DEBUG)
+    logging_format = "%(asctime)s - %(name)s - %(levelname)s - %(process)d: %(message)s"
+    logging.basicConfig(format=logging_format, level=logging.DEBUG)
     initial_sample_steersim()
     main()
