@@ -31,6 +31,7 @@ class HopDataset(torch.utils.data.dataset.Dataset):
             gzip.decompress(fdict["traj"])).reshape(fdict["fshape"]))
         param = torch.Tensor(np.frombuffer(
             gzip.decompress(fdict["param"]), dtype=np.float32))
+        logger.debug("Item %s returned to dataloader", index)
         return traj[[0, 3]], traj[[3, ]], param
 
     def keys(self):

@@ -25,11 +25,11 @@ class TrainingUnit:
         stepTrain = self.step_train(data_loader)
         loss = 0
         for _ in rangeForever():
-            logger.debug("Loop training begin")
             self._consumer.train()
+            logger.debug("Loop training begin")
             for i in range(self._step_max()):
                 loss = next(stepTrain)
-
+            logger.debug("Loop training ends")
             if self._lr_scheduler:
                 self._lr_scheduler.step()
             if summary_writer:
@@ -40,6 +40,7 @@ class TrainingUnit:
         while True:
             full_data_batch = 0
             for data in data_loader.get_data_iter():
+                logger.debug("Start a train step")
                 tensorIn, tensorOut = self._preprocessor(data)
                 tensorIn = tensorIn.to(self._device)
                 tensorOut = tensorOut.to(self._device)
@@ -47,14 +48,15 @@ class TrainingUnit:
                 loss = self._consumer.compute_loss(tensorIn, tensorOut)
                 loss.backward()
                 self._optimizer.step()
+                logger.debug("Completed a train step")
                 yield loss
                 full_data_batch += 1
-            logger.debug(f"Dataset reaches end, restart. {full_data_batch} batches were trained in this round.")
+            logger.info(f"Dataset reaches end, restart. {full_data_batch} batches were trained in this round.")
 
     def score(self, data_loader, summary_writer=None):
         while True:
             for data in data_loader.get_data_iter():
-                logger.debug("Test scoring")
+                logger.debug("Start a score step")
                 with torch.no_grad():
                     tensorIn, tensorOut = self._preprocessor(data)
                     tensorIn = tensorIn.to(self._device)
@@ -62,8 +64,9 @@ class TrainingUnit:
                     loss = self._consumer.compute_loss(tensorIn, tensorOut)
                 if summary_writer:
                     self._monitor(summary_writer, test=True)
+                logger.debug(f"Completed a score step")
                 yield loss
-            logger.debug(f"Scoring Dataset reaches end, restart.")
+            logger.info(f"Scoring Dataset reaches end, restart.")
 
     def forward(self, data_input):
         with torch.no_grad():

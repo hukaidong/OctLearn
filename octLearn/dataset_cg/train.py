@@ -1,4 +1,7 @@
 import torch
+import logging
+
+logger = logging.getLogger(__name__)
 
 
 def float_next(val):
@@ -22,7 +25,7 @@ def define_configs():
     config.update_config({
         "device": "cuda:0",
         "latent_size": 400,
-        "num_workers": 8,
+        "num_workers": 1,
         "step_per_epoch": 200,
         "batch_size": 128,
         "infile_path": ".",
@@ -85,6 +88,7 @@ def main():
 
     try:
         for step in range(800):
+            logger.info(f"Training Step {step}")
             print(f"Training Step {step}")
             summary_writer.global_step = step
             print(f"\tAutoencoder: ")
@@ -102,6 +106,7 @@ def main():
             print(f"\t\tTest loss: {loss_dc_test}")
             summary_writer.add_scalars("main-loss/decipher", {"train": loss_dc_train, "test": loss_dc_test})
 
+            logger.info(f"Simulating Step {step}")
             print(f"Simulating Step {step}")
             # numbers = np.random.uniform(0, 1, (10, 43))
             # steersim_call_parallel(numbers)
@@ -134,9 +139,6 @@ def initial_sample_steersim():
 
 
 if __name__ == "__main__":
-    import logging
-
     logging.basicConfig(format="%(asctime)s - %(name)s - %(levelname)s - %(message)s", level=logging.DEBUG)
-
     initial_sample_steersim()
     main()
