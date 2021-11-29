@@ -88,37 +88,43 @@ def main():
 
     try:
         for step in range(800):
-            logger.info(f"Training Step {step}")
-            print(f"Training Step {step}")
-            summary_writer.global_step = step
-            print(f"\tAutoencoder: ")
+            torch_train_main(step, summary_writer, task_ae_test, task_ae_train, task_dc_test, task_dc_train)
+            simulate_main(loader_test, loader_train, step, trainer)
 
-            loss_ae_train = float_next(task_ae_train)
-            print(f"\t\tTraining loss: {loss_ae_train}")
-            loss_ae_test = float_next(task_ae_test)
-            print(f"\t\tTest loss: {loss_ae_test}")
-            summary_writer.add_scalars("main-loss/autoencoder", {"train": loss_ae_train, "test": loss_ae_test})
-
-            print(f"\tDecipher: ")
-            loss_dc_train = float_next(task_dc_train)
-            print(f"\t\tTraining loss: {loss_dc_train}")
-            loss_dc_test = float_next(task_dc_test)
-            print(f"\t\tTest loss: {loss_dc_test}")
-            summary_writer.add_scalars("main-loss/decipher", {"train": loss_dc_train, "test": loss_dc_test})
-
-            logger.info(f"Simulating Step {step}")
-            print(f"Simulating Step {step}")
-            # numbers = np.random.uniform(0, 1, (10, 43))
-            # steersim_call_parallel(numbers)
-            sample_list = trainer.requester.sample(2)
-            steersim_call_parallel(sample_list)
-            sample_list = trainer.requester.sample(1)
-            steersim_call_parallel(sample_list, generate_for_testcases=True)
-            loader_train.update_keys()
-            loader_test.update_keys()
-
+            trainer.dump()
     except KeyboardInterrupt:
         pass
+
+
+def simulate_main(loader_test, loader_train, step, trainer):
+    logger.info(f"Simulating Step {step}")
+    print(f"Simulating Step {step}")
+    # numbers = np.random.uniform(0, 1, (10, 43))
+    # steersim_call_parallel(numbers)
+    sample_list = trainer.requester.sample(2)
+    steersim_call_parallel(sample_list)
+    sample_list = trainer.requester.sample(1)
+    steersim_call_parallel(sample_list, generate_for_testcases=True)
+    loader_train.update_keys()
+    loader_test.update_keys()
+
+
+def torch_train_main(step, summary_writer, task_ae_test, task_ae_train, task_dc_test, task_dc_train):
+    logger.info(f"Training Step {step}")
+    print(f"Training Step {step}")
+    summary_writer.global_step = step
+    print(f"\tAutoencoder: ")
+    loss_ae_train = float_next(task_ae_train)
+    print(f"\t\tTraining loss: {loss_ae_train}")
+    loss_ae_test = float_next(task_ae_test)
+    print(f"\t\tTest loss: {loss_ae_test}")
+    summary_writer.add_scalars("main-loss/autoencoder", {"train": loss_ae_train, "test": loss_ae_test})
+    print(f"\tDecipher: ")
+    loss_dc_train = float_next(task_dc_train)
+    print(f"\t\tTraining loss: {loss_dc_train}")
+    loss_dc_test = float_next(task_dc_test)
+    print(f"\t\tTest loss: {loss_dc_test}")
+    summary_writer.add_scalars("main-loss/decipher", {"train": loss_dc_train, "test": loss_dc_test})
 
 
 def initial_sample_steersim():

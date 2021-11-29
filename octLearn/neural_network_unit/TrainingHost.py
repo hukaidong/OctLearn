@@ -177,6 +177,9 @@ class TrainingHost:
             self._parm_decipher.load_state_dict(
                 torch.load(infile_format % "parm-decipher", map_location=device))
 
+        self._autoencoder_lr_sched.load_state_dict(
+            torch.load(infile_format % "misc-ae-sched", map_location=device))
+
     def dump(self, _format="%s.torchfile", dump_mask=None):
         outfile_path = get_config()['misc']['outfile_path']
         outfile_format = os.path.join(outfile_path, _format)
@@ -188,3 +191,5 @@ class TrainingHost:
             torch.save(self._img_decoder.state_dict(), outfile_format % "img-decoder")
         if dump_mask[2]:
             torch.save(self._parm_decipher.state_dict(), outfile_format % "parm-decipher")
+
+        torch.save(self._autoencoder_lr_sched.state_dict(), outfile_format % "misc-ae-sched")
