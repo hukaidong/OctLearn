@@ -25,7 +25,7 @@ def define_configs():
     config.update_config({
         "device": "cuda:0",
         "latent_size": 400,
-        "num_workers": 8,
+        "num_workers": 4,
         "step_per_epoch": 200,
         "batch_size": 128,
         "infile_path": ".",
@@ -37,7 +37,7 @@ def define_components():
     from octLearn.polices.encoder import Encoder
     from octLearn.polices.decoder import Decoder
 
-    import octLearn.network_framework.convnet as net
+    import octLearn.network_framework.flatnet as net
     from octLearn.network_framework.radiencoder import RateDistortionAutoencoder
     from octLearn.utils import WeightInitializer
 
@@ -65,7 +65,6 @@ def main():
     from octLearn.dataset_cg.torch_dataset import HopDataset, HopTestDataset
     from octLearn.dataset_cg.torch_batch_sample import CgBatchSampler
     from octLearn.neural_network_unit.TrainingHost import TrainingHost
-    from octLearn.dataset_cg.steersim_quest import steersim_call_parallel
     from octLearn.neural_network_unit.summary_writer import SummaryWriter
 
     define_configs()
@@ -97,6 +96,8 @@ def main():
 
 
 def simulate_main(loader_test, loader_train, step, trainer):
+    from octLearn.dataset_cg.steersim_quest import steersim_call_parallel
+
     logger.info(f"Simulating Step {step}")
     print(f"Simulating Step {step}")
     # numbers = np.random.uniform(0, 1, (10, 43))

@@ -45,7 +45,9 @@ class TrainingHost:
         imageI, imageO = self._data_image_extractor(data_sample)
         imageI, paramO = self._data_param_extractor(data_sample)
         input_channels = imageI.shape[0]
+        input_shape = imageI.shape
         output_channels = imageO.shape[0]
+        output_shape = imageO.shape
         params_size = paramO.shape[0]
         latent_size = int(self.config['latent_size'])
 
@@ -54,8 +56,16 @@ class TrainingHost:
         decipher_cls, *_ = param_decipher
         policy_cls, policy_opts = autoencoder_policy
 
-        encoder_network = encoder_network_base_cls(input_channels, latent_size * 2)
-        decoder_network = decoder_network_base_cls(latent_size, output_channels)
+        encoder_network = encoder_network_base_cls(
+            input_channels=input_channels,
+            input_shape=input_shape,
+            output_size=latent_size * 2,
+        )
+        decoder_network = decoder_network_base_cls(
+            input_size=latent_size,
+            output_channels=output_channels,
+            output_shape=output_shape
+        )
         distort_network = distort_network_base_cls(output_channels)
         self._img_encoder = encoder_cls(encoder_network).to(device)
         self._img_decoder = decoder_cls(decoder_network, distort_network).to(device)
