@@ -1,14 +1,12 @@
 import gzip
+import logging
 from os import environ
 from pathlib import Path
 
 import numpy as np
 import torch
-import logging
-
 
 from octLearn.dataset_cg.read_binary import get_trajectory_feature_from_file
-
 
 logger = logging.getLogger(__name__)
 

@@ -1,5 +1,6 @@
-import torch
 import logging
+
+import torch
 
 logger = logging.getLogger(__name__)
 
@@ -29,7 +30,7 @@ def define_configs():
         "step_per_epoch": 200,
         "batch_size": 128,
         "infile_path": ".",
-        "outfile_path": ".",
+        "outfile_path": "./runs/train_al",
     })
 
 
@@ -51,10 +52,10 @@ def define_components():
         "image_decoder": (Decoder, net.FlatToImgNetwork, net.ImgToImgDisturbNetwork),
         "param_decipher": (net.FlatToFlatNetwork,),
         "autoencoder_policy": (RateDistortionAutoencoder,
-                               {"lambda0": 1, "lambda1": 0.001, "lambda2": 0.01, "lambda3": 0.5}),
+                               {"lambda0": 1, "lambda1": 0, "lambda2": 1, "lambda3": 0}),
         "weight_initializer": (WeightInitializer,),
-        "autoencoder_optimizer": (SGD, dict(lr=0.01, weight_decay=0.002)),
-        "autoencoder_lr_scheduler": (ExponentialLR, dict(gamma=0.95)),
+        "autoencoder_optimizer": (SGD, dict(lr=1, weight_decay=0.002)),
+        "autoencoder_lr_scheduler": (ExponentialLR, dict(gamma=0.99)),
         "decipher_optimizer": (SGD, dict(lr=0.01, weight_decay=1e-5)),
     }
 
@@ -96,16 +97,17 @@ def main():
 
 
 def simulate_main(loader_test, loader_train, step, trainer):
+    import numpy as np
     from octLearn.dataset_cg.steersim_quest import steersim_call_parallel
 
     logger.info(f"Simulating Step {step}")
     print(f"Simulating Step {step}")
-    # numbers = np.random.uniform(0, 1, (10, 43))
-    # steersim_call_parallel(numbers)
-    sample_list = trainer.requester.sample(2)
-    steersim_call_parallel(sample_list)
-    sample_list = trainer.requester.sample(1)
-    steersim_call_parallel(sample_list, generate_for_testcases=True)
+    numbers = np.random.uniform(0, 1, (2, 43))
+    steersim_call_parallel(numbers)
+    # sample_list = trainer.requester.sample(2)
+    # steersim_call_parallel(sample_list)
+    # sample_list = trainer.requester.sample(1)
+    # steersim_call_parallel(sample_list, generate_for_testcases=True)
     loader_train.update_keys()
     loader_test.update_keys()
 
@@ -147,6 +149,6 @@ def initial_sample_steersim():
 
 if __name__ == "__main__":
     logging_format = "%(asctime)s - %(name)s - %(levelname)s - %(process)d: %(message)s"
-    logging.basicConfig(format=logging_format, level=logging.DEBUG)
+    logging.basicConfig(format=logging_format, level=logging.WARNING)
     initial_sample_steersim()
     main()
