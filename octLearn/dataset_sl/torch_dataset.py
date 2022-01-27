@@ -5,6 +5,8 @@ from pathlib import Path
 import torch
 
 from .read_binary import get_max_frame_from_trajectory, get_trajectory_slice
+from .trajectory_process import position_frame_from_trajectory_slices, \
+    hidden_state_masking_table_from_trajcetory_slices
 
 logger = logging.getLogger(__name__)
 
@@ -22,8 +24,17 @@ class HopDataset(torch.utils.data.dataset.Dataset):
     def __getitem__(self, index):
         filename, start_key_str = index.split("+")
         start_key = int(start_key_str)
-        xseq = get_trajectory_slice(filename, start_key, start_key + self.slice_size)
-        return xseq
+
+        sequence_length = self.slice_size
+        agent_sequences = get_trajectory_slice(filename, start_key, start_key + sequence_length)
+        num_agent_avail = len(agent_sequences)
+        agent_position_matrix = position_frame_from_trajectory_slices(agent_sequences, sequence_length, num_agent_avail)
+        masking_tables = hidden_state_masking_table_from_trajcetory_slices(agent_sequences, sequence_length, num_agent_avail)
+        return {
+            "num_agent_avail": num_agent_avail,
+            "agent_position_matrix": agent_position_matrix,
+            "masking_tables": masking_tables,
+        }
 
     def keys(self):
         key_list = []

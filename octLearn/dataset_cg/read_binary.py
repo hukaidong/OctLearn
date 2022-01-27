@@ -5,6 +5,10 @@ logger = logging.getLogger(__name__)
 
 
 def read_trajectory_binary(filename):
+    """
+    :param filename:
+    :return:
+    """
     with open(filename, "rb") as file:
         logger.debug("Beginning read file: %s", filename)
         eof = file.seek(0, 2)
