@@ -1,26 +1,28 @@
 import numpy as np
+from itertools import permutations
 
 
-def position_frame_from_trajectory_slices(agent_sequences, length_of_sequence, num_agent):
+def position_frame_from_trajectory_slices(agent_sequences, length_of_sequence):
     """
     :param num_agent: number of agents included in this slice
     :param length_of_sequence: length of sequence in this slice
     :param agent_sequences <= .dataset_sl.read_binary.get_trajectory_slice(*)
-    :return: A 3d numpy tensor. The first dimension is the length of sequence.
-        The second dimension is the number of agent engaged. The third dimension
+    :return: A list of numpy matrix of length "length of sequence".
+        The first dimension is the number of agent engaged. The second dimension
         is 2, contains a tuple of (position_x, position_y). Agent positions will be
         evaluated relative to its start frame, If agent is not engaged in a
         certain frame , it's value will be (0, 0).
     """
-    sequence_matrix = np.zeros(shape=(length_of_sequence, num_agent, 2))
+    sequence_matrix = [[] for _ in length_of_sequence]
 
     for agent_index, agent_seq in enumerate(agent_sequences):
         agent_seq = agent_seq - agent_seq[(0,), :]
-        sequence_matrix[0:agent_seq.shape(0), agent_index, :] = agent_seq
+        sequence_matrix[agent_index].append(agent_seq)
 
-    return sequence_matrix
+    return [np.array(x) for x in sequence_matrix]
 
-def hidden_state_masking_table_from_trajcetory_slices(agent_sequences, length_of_sequence, num_agent):
+
+def hidden_state_masking_table_from_trajectory_slices(agent_sequences, length_of_sequence, num_agent):
     """
 
     :param agent_sequences:
@@ -57,3 +59,43 @@ def hidden_state_masking_table_from_trajcetory_slices(agent_sequences, length_of
 
     return masking_table
 
+
+# dimensions = {-70, 70, -100, 100}
+def get_grid_mask_single_frame(agent_sequence, neighborhood_size, grid_size, is_occupancy=False):
+    """
+    :param agent_sequence: agents position (x, y) in unit of meters
+    :param neighborhood_size: agent neighborhood manhatton distance in unit of meters
+    :param grid_size: size of grid in each dimension
+    :param is_occupancy:
+    :return:
+    """
+
+    agent_number = agent_sequence.shape[0]
+
+    if is_occupancy:
+        frame_mask = np.zeros((agent_number, grid_size ** 2))
+    else:
+        frame_mask = np.zeros((agent_number, agent_number, grid_size ** 2))
+
+    width_bound, height_bound = neighborhood_size * 2, neighborhood_size * 2  # ??
+
+    for agent_index, other_index in permutations(range(agent_number), 2):
+        current_x, current_y = agent_sequence[agent_index]
+        other_x, other_y = agent_sequence[other_index]
+
+        width_low, width_high = current_x - width_bound / 2, current_x + width_bound / 2
+        height_low, height_high = current_y - height_bound / 2, current_y + height_bound / 2
+
+        cell_x = int(np.floor(((other_x - width_low) / width_bound) * grid_size))
+        cell_y = int(np.floor(((other_y - height_low) / height_bound) * grid_size))
+        grid_index = cell_x + cell_y * grid_size
+
+        if cell_x >= grid_size or cell_x < 0 or cell_y >= grid_size or cell_y < 0:
+            continue
+
+        if is_occupancy:
+            frame_mask[agent_index, grid_index] = 1
+        else:
+            frame_mask[agent_index, other_index, grid_index] = 1
+
+    return frame_mask
