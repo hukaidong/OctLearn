@@ -33,8 +33,8 @@ class HopDataset(torch.utils.data.dataset.Dataset):
         num_agent_avail = len(agent_sequences)
         agent_position_matrix = position_frame_from_trajectory_slices(agent_sequences, sequence_length, )
         masking_tables = hidden_state_masking_table_from_trajectory_slices(agent_sequences, sequence_length, num_agent_avail)
-        grid_masks_interact = [get_grid_mask_single_frame(x, self.neighbor_size, self.grid_size, is_occupancy=False) for x in agent_sequences]
-        grid_masks_occupancy = [get_grid_mask_single_frame(x, self.neighbor_size, self.grid_size, is_occupancy=True) for x in agent_sequences]
+        grid_masks_interact = [get_grid_mask_single_frame(x, self.neighbor_size, self.grid_size, is_occupancy=False) for x in agent_position_matrix]
+        grid_masks_occupancy = [get_grid_mask_single_frame(x, self.neighbor_size, self.grid_size, is_occupancy=True) for x in agent_position_matrix]
         return {
             "num_agent_avail": num_agent_avail,
             "agent_position_matrix": agent_position_matrix,

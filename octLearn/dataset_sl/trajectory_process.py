@@ -67,7 +67,8 @@ def get_grid_mask_single_frame(agent_sequence, neighborhood_size, grid_size, is_
     :param neighborhood_size: agent neighborhood manhatton distance in unit of meters
     :param grid_size: size of grid in each dimension
     :param is_occupancy:
-    :return:
+    :return: frame_mask is a 3d tensor that aggregate agents' hidden state according to
+        their position.
     """
 
     agent_number = agent_sequence.shape[0]
