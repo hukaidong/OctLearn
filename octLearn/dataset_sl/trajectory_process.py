@@ -13,13 +13,13 @@ def position_frame_from_trajectory_slices(agent_sequences, length_of_sequence):
         evaluated relative to its start frame, If agent is not engaged in a
         certain frame , it's value will be (0, 0).
     """
-    sequence_matrix = [[] for _ in length_of_sequence]
+    sequence_matrix = []
 
-    for agent_index, agent_seq in enumerate(agent_sequences):
-        agent_seq = agent_seq - agent_seq[(0,), :]
-        sequence_matrix[agent_index].append(agent_seq)
+    for frame_index, agent_seq in enumerate(agent_sequences):
+        agent_seq = agent_seq - agent_seq[(0,), 1:2]
+        sequence_matrix.append(agent_seq[:, 1:])
 
-    return [np.array(x) for x in sequence_matrix]
+    return [np.array(x, dtype=np.float32) for x in sequence_matrix]
 
 
 def hidden_state_masking_table_from_trajectory_slices(agent_sequences, length_of_sequence, num_agent):
@@ -36,21 +36,21 @@ def hidden_state_masking_table_from_trajectory_slices(agent_sequences, length_of
         for each frame, all masks (masking_table, masking_table_inv, masking_unchanged) are given in a tuple
     """
     agent_ids_by_frame = [[] for _ in range(length_of_sequence)]
-    for agent_index, agent_sequence in enumerate(agent_sequences):
-        current_agent_frame_length = agent_sequence.shape[0]
-        for frame_index in range(current_agent_frame_length):
-            agent_ids_by_frame[frame_index].append(agent_index)
+
+    for frame_index, agent_sequence in enumerate(agent_sequences):
+        for agent_index, *_ in agent_sequence:
+            agent_ids_by_frame[frame_index].append(int(agent_index))
 
     all_agent_id_set = set(range(num_agent))
     masking_table = []
 
     for agent_ids_set in agent_ids_by_frame:
         active_agent_length = len(agent_ids_set)
-        masking_matrix = np.zeros((active_agent_length, num_agent))
-        masking_unchanged = np.zeros((num_agent, num_agent))
+        masking_matrix = np.zeros((active_agent_length, num_agent), dtype=np.float32)
+        masking_unchanged = np.zeros((num_agent, num_agent), dtype=np.float32)
 
         for agent_active_id, agent_id in enumerate(agent_ids_set):
-            masking_matrix[agent_id, agent_active_id] = 1
+            masking_matrix[agent_active_id, agent_id] = 1
 
         for agent_id in all_agent_id_set.difference(agent_ids_set):
             masking_unchanged[agent_id, agent_id] = 1
@@ -74,9 +74,9 @@ def get_grid_mask_single_frame(agent_sequence, neighborhood_size, grid_size, is_
     agent_number = agent_sequence.shape[0]
 
     if is_occupancy:
-        frame_mask = np.zeros((agent_number, grid_size ** 2))
+        frame_mask = np.zeros((agent_number, grid_size ** 2), dtype=np.float32)
     else:
-        frame_mask = np.zeros((agent_number, agent_number, grid_size ** 2))
+        frame_mask = np.zeros((agent_number, agent_number, grid_size ** 2), dtype=np.float32)
 
     width_bound, height_bound = neighborhood_size * 2, neighborhood_size * 2  # ??
 

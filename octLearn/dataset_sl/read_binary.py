@@ -27,4 +27,4 @@ def get_trajectory_slice(filename: str, start: int, end: int):
         for frameid, data in enumerate(arr[start:end]):
             agent_traj[frameid].append([aid, *data])
 
-    return [numpy.array(x) for x in agent_traj]
+    return [numpy.array(x) for x in agent_traj], len(agent_array)

@@ -25,18 +25,18 @@ class HopDataset(torch.utils.data.dataset.Dataset):
         return len(self.keys())
 
     def __getitem__(self, index):
+        print(f"getting item with key {index}")
         filename, start_key_str = index.split("+")
         start_key = int(start_key_str)
 
         sequence_length = self.slice_size
-        agent_sequences = get_trajectory_slice(filename, start_key, start_key + sequence_length)
-        num_agent_avail = len(agent_sequences)
+        agent_sequences, max_agent_idx = get_trajectory_slice(filename, start_key, start_key + sequence_length)
+
         agent_position_matrix = position_frame_from_trajectory_slices(agent_sequences, sequence_length, )
-        masking_tables = hidden_state_masking_table_from_trajectory_slices(agent_sequences, sequence_length, num_agent_avail)
+        masking_tables = hidden_state_masking_table_from_trajectory_slices(agent_sequences, sequence_length, max_agent_idx)
         grid_masks_interact = [get_grid_mask_single_frame(x, self.neighbor_size, self.grid_size, is_occupancy=False) for x in agent_position_matrix]
         grid_masks_occupancy = [get_grid_mask_single_frame(x, self.neighbor_size, self.grid_size, is_occupancy=True) for x in agent_position_matrix]
         return {
-            "num_agent_avail": num_agent_avail,
             "agent_position_matrix": agent_position_matrix,
             "masking_tables": masking_tables,
             "grid_masks_interact": grid_masks_interact,

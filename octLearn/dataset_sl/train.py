@@ -1,19 +1,32 @@
 import logging
+
 import torch
 
 logger = logging.getLogger(__name__)
 
 
 def main():
-    from octLearn.dataset_cg.torch_dataset import HopDataset, HopTestDataset
-    from octLearn.dataset_cg.torch_batch_sample import CgBatchSampler
-    from octLearn.neural_network_unit.TrainingHost import TrainingHost
-    from octLearn.neural_network_unit.summary_writer import SummaryWriter
-
-
-
-
-
+    from octLearn.dataset_sl.torch_dataset import HopDataset
+    from octLearn.network_framework.social_lstm import SocialModel
+    from torch.utils.data.dataloader import DataLoader
+    from torch.utils.data.sampler import SubsetRandomSampler
+    dataset = HopDataset()
+    dataloader = DataLoader(dataset,
+                            batch_size=None,
+                            sampler=SubsetRandomSampler(dataset.keys()),
+                            pin_memory=True,
+                            num_workers=2,
+                            persistent_workers=False)
+    model = SocialModel().cuda()
+    optimizer = torch.optim.Adagrad(model.parameters(), lr=3e-3)
+    for data in dataloader:
+        optimizer.zero_grad()
+        hidden_states = torch.zeros([250, 128], dtype=torch.float32)
+        cell_states = torch.zeros([250, 128], dtype=torch.float32)
+        output, losses = model.forward(data, [hidden_states, cell_states])
+        total_loss = sum([x.mean() for x in losses])
+        print(total_loss)
+        total_loss.backward()
 
 
 def initial_sample_steersim():
@@ -35,6 +48,6 @@ def initial_sample_steersim():
 
 if __name__ == "__main__":
     logging_format = "%(asctime)s - %(name)s - %(levelname)s - %(process)d: %(message)s"
-    logging.basicConfig(format=logging_format, level=logging.WARNING)
-    initial_sample_steersim()
+    logging.basicConfig(format=logging_format, level=logging.INFO)
+    # initial_sample_steersim()
     main()
