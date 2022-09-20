@@ -19,14 +19,18 @@ def main():
                             persistent_workers=False)
     model = SocialModel().cuda()
     optimizer = torch.optim.Adagrad(model.parameters(), lr=3e-3)
+    file = open("losses.log", "w")
     for data in dataloader:
         optimizer.zero_grad()
         hidden_states = torch.zeros([250, 128], dtype=torch.float32)
         cell_states = torch.zeros([250, 128], dtype=torch.float32)
         output, losses = model.forward(data, [hidden_states, cell_states])
-        total_loss = sum([x.mean() for x in losses])
-        print(total_loss)
+        total_loss = sum([x.mean() for x in losses]) / len(losses)
+        file.write(f"{float(total_loss)}\n")
+        file.flush()
+        print(float(total_loss))
         total_loss.backward()
+    file.close()
 
 
 def initial_sample_steersim():
@@ -40,14 +44,14 @@ def initial_sample_steersim():
     #     return
     shutil.rmtree(os.environ["SteersimRecordPath"], ignore_errors=True)
     os.makedirs(os.environ["SteersimRecordPath"], exist_ok=True)
-    numbers = np.random.uniform(0, 1, (5, 43))
+    numbers = np.random.uniform(0, 1, (225-30, 43))
     steersim_call_parallel(numbers)
-    numbers = np.random.uniform(0, 1, (1, 43))
-    steersim_call_parallel(numbers, generate_for_testcases=True)
+    #numbers = np.random.uniform(0, 1, (1, 43))
+    #steersim_call_parallel(numbers, generate_for_testcases=True)
 
 
 if __name__ == "__main__":
     logging_format = "%(asctime)s - %(name)s - %(levelname)s - %(process)d: %(message)s"
     logging.basicConfig(format=logging_format, level=logging.INFO)
-    # initial_sample_steersim()
-    main()
+    initial_sample_steersim()
+    # main()
